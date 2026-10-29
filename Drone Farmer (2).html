@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drone Farmer</title>
+<style>
+:root{color-scheme:light;--bg:#f4f1e8;--card:#fffdf7;--tx:#2b2a24;--mut:#7a766a;--ac:#3f8f3a;--grass:#8fc46a;--soil:#8a6040;--ed:#1f2420;--edtx:#d9f2cf;--bd:#ddd6c3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#151a15;--card:#1e251e;--tx:#e6eadf;--mut:#98a090;--grass:#4f7f3a;--soil:#6b4a30;--ed:#101410;--bd:#2d372d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:14px 18px 0}h1{margin:0 0 8px;font-size:22px}
+main{display:grid;grid-template-columns:minmax(280px,460px) 1fr;gap:14px;padding:12px 18px 24px}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+h2{margin:0 0 4px;font-size:17px}h3{margin:14px 0 4px}p{margin:4px 0 10px;color:var(--mut)}
+#farm{display:grid;gap:3px;aspect-ratio:1;width:100%;position:relative}
+.t svg{position:absolute;inset:0;width:100%;height:100%}
+.t.g{background:linear-gradient(135deg,#8ccb5e,#6aa84a)}.t.g:nth-child(odd){background:linear-gradient(135deg,#83c356,#65a145)}
+.t.s{background:linear-gradient(180deg,#80563a,#5d3b24)}
+.pg{position:absolute;left:14%;right:14%;bottom:4px;height:5px;background:#0007;border-radius:3px;overflow:hidden}.pg i{display:block;height:100%;background:linear-gradient(90deg,#9be15d,#ffd54a)}
+.sw{transform-box:fill-box;transform-origin:50% 100%;animation:sw 2.4s ease-in-out infinite}
+@keyframes sw{50%{transform:rotate(2.5deg)}}
+#drone,.dr,.pop{position:absolute;z-index:3;pointer-events:none;width:calc((100% - (var(--n) - 1)*3px)/var(--n));height:calc((100% - (var(--n) - 1)*3px)/var(--n));left:calc(var(--x)*((100% - (var(--n) - 1)*3px)/var(--n) + 3px));top:calc(var(--y)*((100% - (var(--n) - 1)*3px)/var(--n) + 3px))}
+#drone,.dr{transition:left .2s linear,top .2s linear}#drone svg,.dr svg{width:100%;height:100%;overflow:visible}
+.hat{position:absolute;left:50%;top:-4%;transform:translateX(-50%);font-style:normal;font-size:clamp(10px,2.4vw,18px);z-index:2;pointer-events:none}
+.bd{position:absolute;right:2px;bottom:0;font-size:10px;background:#000a;color:#fff;border-radius:6px;padding:0 4px}
+#fsel{padding:7px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+.rt{transform-box:fill-box;transform-origin:center;animation:sp .18s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.hv{animation:bob 1.8s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-2.5px)}}
+.pop{display:flex;justify-content:center;align-items:flex-start;font-weight:800;color:#fff4a8;text-shadow:0 1px 3px #000;font-size:clamp(12px,3vw,20px);animation:pp .9s ease-out forwards;z-index:4}
+@keyframes pp{to{transform:translateY(-32px);opacity:0}}
+.t{position:relative;border-radius:6px;overflow:hidden;box-shadow:inset 0 0 0 1px #0002,inset 0 -3px 6px #0002}
+#stats{display:flex;gap:14px;margin-top:10px;font-weight:600;flex-wrap:wrap}
+#tabs{display:flex;gap:2px;flex-wrap:wrap;align-items:flex-end}
+#tabs .tb{display:flex;align-items:center;gap:6px;background:#d8d8d8;color:#222;border:1px solid #9aa;border-bottom:0;border-radius:6px 6px 0 0;padding:2px 8px;font-size:13px;cursor:pointer;user-select:none}
+#tabs .tb.on{background:#fff;font-weight:600}
+#tabs .tb i{font-style:normal;opacity:.5}#tabs .tb i:hover{opacity:1;color:#c00}
+#tabs .add{background:#f0f0f0;padding:2px 10px;font-weight:700}
+.edw{position:relative}
+.ed{display:flex;height:290px;border:1px solid #9aa;background:#fff;font:14px/20px ui-monospace,Menlo,Consolas,"Courier New",monospace;overflow:hidden}
+#ln{padding:6px 8px 40px 6px;background:#e4e4e4;color:#2b7fb8;text-align:right;white-space:pre;user-select:none;overflow:hidden;min-width:40px;border-right:1px solid #bbb}
+.cw{position:relative;flex:1;min-width:0}
+#cl{position:absolute;left:0;right:0;height:20px;background:#e8f0ff;top:6px}
+#hl,#code{position:absolute;inset:0;margin:0;padding:6px 8px 40px;font:inherit;white-space:pre;tab-size:2;border:0;letter-spacing:0;width:100%;height:100%}
+#hl{pointer-events:none;color:#000;overflow:hidden}
+#code{background:transparent;color:transparent;-webkit-text-fill-color:transparent;caret-color:#000;resize:none;outline:0;overflow:auto}
+#code::selection{background:#b5d5ff}
+.hk{color:#00f;font-weight:bold}.hc{color:#008000}.hs{color:#808080}.hn{color:#f80}.hf{color:#8000ff;font-weight:bold}.hx{color:#c00;text-decoration:underline wavy #c00}
+#sb{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#f0f0f0;color:#333;border:1px solid #9aa;border-top:0;border-radius:0 0 6px 6px;padding:2px 8px;font-size:12px;margin-bottom:10px}
+#ac{display:none;position:absolute;z-index:6;background:#fff;color:#000;border:1px solid #888;box-shadow:0 3px 10px #0004;font:13px ui-monospace,Menlo,monospace;max-height:190px;overflow:auto;min-width:210px}
+.ai{padding:2px 8px;cursor:pointer;display:flex;gap:12px;justify-content:space-between}.ai.on{background:#316ac5;color:#fff}.ai span{opacity:.7;font-size:12px}
+.bar{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap}
+button{border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;background:var(--ac);color:#fff}
+button.g{background:var(--bd);color:var(--tx)}button:disabled{opacity:.5;cursor:not-allowed}
+#out{background:var(--ed);color:var(--edtx);border-radius:8px;padding:8px 10px;margin:0;min-height:60px;max-height:130px;overflow:auto;font:13px ui-monospace,Menlo,monospace;white-space:pre-wrap}
+code{background:var(--bd);padding:1px 5px;border-radius:4px;font-size:13px}
+#ov{display:none;position:fixed;inset:0;background:#000a;z-index:20;align-items:flex-start;justify-content:center;padding:calc(12px + env(safe-area-inset-top,0px)) 12px 12px;overflow:auto}
+#ov .card{max-width:780px;width:100%}.tabs{display:flex;gap:8px;margin-bottom:10px}
+.nodes{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.nd{flex:1 1 170px;border:2px solid var(--bd);border-radius:10px;padding:8px;font-size:13px}
+.nd.owned{border-color:var(--ac)}.nd.lock{opacity:.6}.nd button{padding:5px 10px;margin-top:4px}
+.ar{text-align:center;color:var(--mut);min-height:8px}
+.bk{border-bottom:1px solid var(--bd);padding:8px 0}.bk.lk{opacity:.65}
+.ic{display:flex;align-items:center;gap:5px;background:var(--bd);border-radius:8px;padding:3px 9px;font-weight:600;font-size:13px}.ic.off{opacity:.4}.ic b{min-width:1.4em;text-align:right}
+#invbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
+.ex{background:#1f2420;color:#d9f2cf;border-radius:8px;padding:8px 10px;margin:6px 0;font:12.5px/1.45 ui-monospace,Menlo,monospace;overflow-x:auto;white-space:pre}
+.mu{color:var(--mut);font-size:13px}.bk button{padding:4px 10px}
+#tut{display:none;position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(450px,94vw);background:var(--card);color:var(--tx);border:2px solid var(--ac);border-radius:14px;padding:12px 14px;z-index:30;box-shadow:0 8px 28px #0006}
+#tut p{color:var(--tx);margin:6px 0 10px}.tk{display:flex;justify-content:space-between;gap:8px}.tn{display:flex;gap:8px;align-items:center;margin-top:8px}
+.thl{outline:3px solid #ffb300;outline-offset:3px;border-radius:8px;position:relative;z-index:12;animation:thp 1.2s ease-in-out infinite}@keyframes thp{50%{outline-color:#ff6f00}}
+.fsonly{display:none}.fs .fsonly{display:inline}
+#farmcard.fs{position:fixed;inset:0;z-index:15;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;overflow:auto;padding-top:calc(14px + env(safe-area-inset-top,0px))}
+#farmcard.fs #farm{width:min(94vw,calc(100vh - 150px));flex:none}#farmcard.fs .bar{margin:0}
+</style></head><body>
+<header><h1>🚁 Drone Farmer<span id="coins"></span></h1>
+<div class="bar"><button onclick="ov(0)">📖 Book</button><button onclick="ov(1)">🌳 Skill Tree</button><button onclick="ov(2)">🛒 Shop</button><button onclick="ov(3)">♻ Rebirth</button><button onclick="ov(4)">🏆 Leaderboard</button><button class="g" onclick="tut(0)">❓ Tutorial</button></div></header>
+<main>
+<section class="card" id="farmcard"><div class="bar" style="margin-top:0"><button class="g" id="fsb" onclick="toggleFs()">⛶ Fullscreen</button><span class="fsonly"><select id="fsel" onchange="fsSel(this.value)"></select> <button onclick="$('run').click()">▶ Run script</button> <button class="g" onclick="$('stop').click()">■ Stop</button></span></div><div id="farm"></div><div id="stats"></div><div id="invbar"></div></section>
+<section class="card">
+<h2>Your code</h2><p>One farm, one drone. Harvest crops into your inventory, sell them in the 🛒 Shop for 🪙 coins, then spend coins on skills and upgrades. Crops grow in real time (about 8 seconds), and the farm and drone stay exactly as they are when your script ends.</p>
+<div id="tabs"></div><div class="edw"><div class="ed"><div id="ln"></div><div class="cw"><div id="cl"></div><pre id="hl"></pre><textarea id="code" spellcheck="false" wrap="off" autocapitalize="off" autocomplete="off">// Some wild wheat is ripe on the grass. It never grows back!
+harvest()
+move(right)
+harvest()
+move(right)
+harvest()
+// Sell the hay in the 🛒 Shop for coins, then unlock Tilling and Sowing.
+</textarea></div></div><div id="ac"></div></div><div id="sb"><span id="pos"></span><span>JavaScript · Ctrl+Space autocomplete · F5 run · Ctrl+D duplicate line · Ctrl+/ comment</span></div>
+<div class="bar"><button id="run">▶ Run</button><button id="stop" class="g">■ Stop</button>
+<label>Speed <input id="spd" type="range" min="1" max="10" value="10"></label></div>
+<pre id="out"></pre></section></main>
+<div id="tut"></div>
+<div id="ov"><div class="card"><div id="ovb"></div></div></div>
+<script>
+const CROPS={wheat:{ms:8000,y:1},carrot:{ms:16000,y:3},pumpkin:{ms:30000,y:9},sunflower:{ms:50000,y:22},cactus:{ms:70000,y:45},melon:{ms:110000,y:90},dragonfruit:{ms:150000,y:160},bush:{ms:12000,y:2},tree:{ms:25000,y:6}},CONSTS=['up','down','left','right','wheat','carrot','pumpkin','sunflower','cactus','melon','dragonfruit','bush','tree'],lv=a=>[1,2,3,4,5,6,7].filter(i=>owned[a+i]).length,cms=c=>CROPS[c.k||'wheat'].ms*Math.pow(.88,lv('gb'))*Math.pow(.92,rb.gro||0)*(c.k=='tree'?1+.5*treeAdj(c):1),fr=c=>c.t==2?Math.min(1,(Date.now()-c.p)/cms(c)):0,$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let wheat=0,owned={},st,stop=true,yc=0,rb={},rp=0,rebirths=0,earned=0,szOv=0,totalEarned=0,bestLife=0,curTab=0;
+try{localStorage.removeItem('df2_w');localStorage.removeItem('df2_o')}catch(e){}
+const sv=()=>{};
+const SZ=()=>owned.grid9?24:owned.grid8?20:owned.grid7?16:owned.grid6?12:owned.grid5?10:owned.grid4?8:owned.grid3?6:owned.grid2?5:owned.grid1?4:3;
+function farm(o){const n=szOv||SZ(),on=o?o.n:0,g=[];for(let y=0;y<n;y++)for(let x=0;x<n;x++)g.push(o&&x<on&&y<on?o.g[y*on+x]:{t:0,w:o?0:1,p:0});return{n,g}}
+function reset(){st={x:0,y:0,ticks:0,...farm()};render()}
+const SV=b=>`<svg viewBox='0 0 100 100'>${b}</svg>`;
+const GRASS=`<g stroke='#4a8532' stroke-width='2.2' stroke-linecap='round' fill='none' opacity='.7'><path d='M18 34q1-9 5-13M23 34q0-8 6-11M28 34q-1-7-4-11'/><path d='M66 80q1-9 5-13M71 80q0-8 6-11M76 80q-1-7-4-11'/><path d='M72 28q0-6 3-9M76 28q1-5 5-7'/></g><circle cx='42' cy='72' r='2.2' fill='#fff7c2'/><circle cx='14' cy='78' r='1.8' fill='#ffd3e0'/>`;
+const FURROW=`<g fill='none' stroke-linecap='round'>${[20,42,64,86].map(y=>`<path d='M4 ${y}Q50 ${y-8} 96 ${y}' stroke='#3b2614' stroke-width='5' opacity='.45'/><path d='M4 ${y+3}Q50 ${y-5} 96 ${y+3}' stroke='#a77a4c' stroke-width='1.6' opacity='.5'/>`).join('')}</g><g fill='#3b2614' opacity='.45'><circle cx='16' cy='55' r='2'/><circle cx='80' cy='35' r='1.6'/><circle cx='62' cy='92' r='1.8'/></g>`;
+function grains(cx,cy,ripe){const c=ripe?'#f2c230':'#a9cf45',d=ripe?'#c9921a':'#7fae2f';let o='';
+for(let k=0;k<4;k++){const y=cy+k*5;o+=`<ellipse cx='${cx-4}' cy='${y}' rx='2.6' ry='4.2' transform='rotate(-25 ${cx-4} ${y})' fill='${c}' stroke='${d}' stroke-width='.6'/><ellipse cx='${cx+4}' cy='${y}' rx='2.6' ry='4.2' transform='rotate(25 ${cx+4} ${y})' fill='${c}' stroke='${d}' stroke-width='.6'/>`}
+return o+`<ellipse cx='${cx}' cy='${cy-5}' rx='2.4' ry='4.4' fill='${c}' stroke='${d}' stroke-width='.6'/>`}
+function plant(p,k){if(k=='carrot')return carrot(p);if(k=='pumpkin')return pumpkin(p);if(k=='sunflower')return sunflower(p);if(k=='bush')return bush(p);if(k=='tree')return tree(p);if(k=='cactus')return cactus(p);if(k=='dragonfruit')return cactus(p,1);if(k=='melon')return pumpkin(p,1);const H=p<.25?0:p<.6?1:p<1?2:3;
+if(!H)return `<g fill='#63c13f'><path d='M50 80Q38 66 33 56Q46 58 50 74Z'/><path d='M50 80Q62 64 68 54Q55 58 50 74Z'/></g>`;
+const col=['','#4fae34','#9fc43a','#d9a826'][H],hg=[0,30,46,56][H];
+return `<g class='${H==3?'sw':''}'>`+[32,50,68].map((x,i)=>{const h=hg-(i==1?0:5),top=88-h,tx=x+(i-1)*4;
+return `<path d='M${x} 88Q${x+(i-1)*2} ${88-h/2} ${tx} ${top}' stroke='${col}' stroke-width='3.4' fill='none' stroke-linecap='round'/>`+(H==1?`<ellipse cx='${tx}' cy='${top}' rx='3' ry='5' fill='#6fcf4a'/>`:grains(tx,top,H==3))}).join('')+'</g>'}
+function carrot(p){const H=p<.25?0:p<.6?1:p<1?2:3;
+const L=(x,y,c)=>`<path d='M50 78Q${x} ${y+10} ${x} ${y}' stroke='${c}' stroke-width='3.2' fill='none' stroke-linecap='round'/>`;
+if(!H)return `<g fill='#63c13f'><path d='M50 80Q40 70 38 62Q48 66 50 76Z'/><path d='M50 80Q60 68 64 60Q54 64 50 76Z'/></g>`;
+const sc=[0,.55,.8,1][H],g=H==3?'#3ea43a':'#5cc24a';
+return `<g transform='translate(50 78) scale(${sc}) translate(-50 -78)'>${L(28,38,g)}${L(40,26,g)}${L(50,22,g)}${L(60,26,g)}${L(72,38,g)}</g>`+(H==3?`<path d='M38 80Q50 70 62 80Q60 90 50 94Q40 90 38 80Z' fill='#f58a1f' stroke='#b85d0b' stroke-width='1.4'/><path d='M44 80Q50 83 56 80' stroke='#b85d0b' stroke-width='1' fill='none'/>`:`<ellipse cx='50' cy='82' rx='12' ry='4' fill='#5d3b24'/>`)}
+function pumpkin(p,m){const sc=.25+.75*p,ripe=p>=1,col=m?(ripe?'#3f9f4a':'#8fcf6a'):ripe?'#f28c28':p>.6?'#c9b13a':'#7fbf45',dk=m?'#1f6b2a':ripe?'#b85f10':'#4f8a2c';
+return `<g fill='#3f9a3a'><path d='M10 82q10-20 24-8q-8 14-24 8Z'/><path d='M90 82q-10-20-24-8q8 14 24 8Z'/></g><g transform='translate(50 66) scale(${sc}) translate(-50 -66)'><ellipse cx='50' cy='66' rx='32' ry='24' fill='${col}' stroke='${dk}' stroke-width='2'/><path d='M50 42Q40 66 50 90M36 46Q22 66 36 88M64 46Q78 66 64 88' stroke='${dk}' stroke-width='1.8' fill='none' opacity='.7'/><rect x='46' y='34' width='8' height='12' rx='3' fill='#4b7a2a'/></g>`}
+function cactus(p,m){const sc=.35+.65*p,ripe=p>=1,bc=m?'#e0488f':'#4a9a4a',dc=m?'#8e1b55':'#2f6f33';
+return `<g transform='translate(50 90) scale(${sc}) translate(-50 -90)'><rect x='38' y='30' width='24' height='62' rx='12' fill='${bc}' stroke='${dc}' stroke-width='2'/>${p>.5?`<path d='M38 58H28Q20 58 20 50V42M62 66H72Q80 66 80 58V50' stroke='${bc}' stroke-width='9' fill='none' stroke-linecap='round'/>`:''}<path d='M50 34V88M44 40V86M56 40V86' stroke='${dc}' stroke-width='1' opacity='.5'/>${ripe?`<circle cx='50' cy='28' r='7' fill='#ff5fa2'/><circle cx='50' cy='28' r='3' fill='#ffd54a'/>`:''}</g>`}
+function bush(p){const sc=.4+.6*p;return `<g transform='translate(50 84) scale(${sc}) translate(-50 -84)'><circle cx='36' cy='66' r='18' fill='#3f9a3a'/><circle cx='62' cy='66' r='20' fill='#4aa843'/><circle cx='50' cy='52' r='20' fill='#58b84d'/>${p>=1?`<g fill='#d33'><circle cx='40' cy='60' r='3'/><circle cx='58' cy='56' r='3'/><circle cx='64' cy='70' r='3'/><circle cx='46' cy='72' r='3'/></g>`:''}</g>`}
+function tree(p){const sc=.35+.65*p;return `<g transform='translate(50 90) scale(${sc}) translate(-50 -90)'><rect x='44' y='56' width='12' height='34' rx='3' fill='#7a5230'/><circle cx='50' cy='38' r='26' fill='#2f8a3a'/><circle cx='36' cy='48' r='16' fill='#3a9a44'/><circle cx='64' cy='48' r='16' fill='#3a9a44'/></g>`}
+const extra=(c,p)=>{const T=v=>`<text x='50' y='97' font-size='20' text-anchor='middle' font-weight='700' fill='#fff' stroke='#000' stroke-width='.8' paint-order='stroke'>${v}</text>`;
+if(c.k=='cactus')return T(c.sz);if(c.k=='sunflower')return p>=.6?T(c.pet):'';
+if(c.k=='pumpkin'&&c.dead&&p>=.5)return `<ellipse cx='50' cy='66' rx='30' ry='22' fill='#6b5b4b' opacity='.9'/><path d='M38 56l24 20M62 56l-24 20' stroke='#222' stroke-width='3'/>`;return ''};
+function sunflower(p){const h=20+36*p,top=88-h,r=5+7*p;let pt='';
+if(p>=.6)for(let i=0;i<12;i++)pt+=`<ellipse cx='50' cy='${top-r-3}' rx='3.2' ry='${r*.75}' fill='${p>=1?'#ffd21f':'#d6dc4a'}' transform='rotate(${i*30} 50 ${top})'/>`;
+return `<g class='${p>=1?'sw':''}'><path d='M50 90Q47 ${88-h/2} 50 ${top}' stroke='#3f9a3a' stroke-width='4' fill='none' stroke-linecap='round'/><path d='M50 ${top+h*.5}q-14-8-18-2q6 10 18 2Z' fill='#4fb046'/>${pt}<circle cx='50' cy='${top}' r='${r*.62+2}' fill='${p>=1?'#5b3a1b':'#5f9a3a'}'/></g>`}
+const rot=(x,y)=>`<g class='rt'><circle cx='${x}' cy='${y}' r='15' fill='#cfeaff' opacity='.28'/><ellipse cx='${x}' cy='${y}' rx='15' ry='2.6' fill='#1b2029'/><ellipse cx='${x}' cy='${y}' rx='2.6' ry='15' fill='#1b2029' opacity='.8'/></g><circle cx='${x}' cy='${y}' r='4' fill='#556079' stroke='#222' stroke-width='1'/>`;
+const DR=document.createElement('div');DR.id='drone';
+DR.innerHTML=`<svg viewBox='0 0 100 100'><ellipse cx='52' cy='86' rx='26' ry='6' fill='#000' opacity='.3'/><g class='hv'><path d='M28 28L72 72M72 28L28 72' stroke='#2b3240' stroke-width='6' stroke-linecap='round'/>${rot(27,27)}${rot(73,27)}${rot(27,73)}${rot(73,73)}<rect x='35' y='35' width='30' height='30' rx='10' fill='#eef2f8' stroke='#2b3240' stroke-width='2.5'/><rect x='41' y='41' width='18' height='18' rx='6' fill='#cfd7e4'/><circle cx='50' cy='50' r='6.5' fill='#1f2a3d'/><circle cx='50' cy='50' r='3' fill='#4cc3ff'/><circle cx='50' cy='38.5' r='1.8' fill='#ff5252'/></g></svg><i class='hat'></i>`;
+let lastW=wheat,PA={x:0,y:0},cd={tw:0,oc:0,on:0};const D0={id:0,depth:0,get x(){return st.x},set x(v){st.x=v},get y(){return st.y},set y(v){st.y=v}},DS=[D0],pending=new Set(),AFn=Object.getPrototypeOf(async function(){}).constructor,maxD=()=>1+lv('hg')+(rb.hang||0);
+function render(){const n=st.n,f=$('farm');f.style.gridTemplateColumns=`repeat(${n},1fr)`;f.style.setProperty('--n',n);
+if(f.dataset.n!=n){f.querySelectorAll('.t').forEach(x=>x.remove());for(let i=0;i<n*n;i++){const d=document.createElement('div');d.className='t';f.insertBefore(d,DR.parentNode==f?DR:null)}f.dataset.n=n}
+if(DR.parentNode!=f)f.append(DR);
+const tl=f.querySelectorAll('.t');
+st.g.forEach((c,i)=>{const p=fr(c),k=c.t+'|'+(c.t==2?Math.floor(p*20):0)+'|'+(c.w?1:0)+'|'+(c.k||'')+'|'+(c.t==2?c.sz+'-'+c.pet+'-'+(c.dead&&p>=.5?1:0):''),d=tl[i];if(!d||d.dataset.k==k)return;d.dataset.k=k;
+d.className='t '+(c.t==0?'g':'s');
+d.innerHTML=SV((c.t==0?GRASS:FURROW)+(c.t==2?plant(p,c.k)+extra(c,p):'')+(c.t==0&&c.w?plant(1):''))+(c.t==2&&p<1?`<div class='pg'><i style='width:${p*100}%'></i></div>`:'')});
+DS.forEach(d=>{const el=d.id?d.el:DR;el.style.setProperty('--x',d.x);el.style.setProperty('--y',d.y);const ht=el.querySelector('.hat');if(ht)ht.textContent=d.hat||'';el.style.transitionDuration=Math.max(60,Math.round(delay()*.9))+'ms'});
+lastW=wheat;
+$('stats').innerHTML=`<span>🪙 ${wheat}</span><span>⚙ ${st.ticks} actions</span><span>🚁 ${DS.length}/${maxD()}</span><span>Field ${n}×${n}</span>${rebirths?`<span>♻ ${rebirths}</span>`:''}`;$('coins').textContent=' · 🪙 '+wheat;invBar()}
+const cell=()=>st.g[st.y*st.n+st.x];
+const delay=()=>Math.round(450/(1+.5*lv('mt'))/(1+.15*(rb.spd||0))/(Date.now()<cd.on?3:1)*(1+(10-+$('spd').value)*.35));
+const inv={},PRICE={hay:1,wheat:1,carrot:3,pumpkin:9,power:22,cactus:45,melon:90,dragonfruit:160,wood:2},
+give=(it,q)=>{q=Math.max(1,Math.round(q));inv[it]=(inv[it]||0)+q;popAt('+'+q+' '+(IC[it]||it))},
+sellItem=(it,n)=>{const have=inv[it]||0;n=n==null?have:Math.min(have,Math.floor(n));if(!(n>0)||!PRICE[it])return 0;const g=Math.max(1,Math.round(n*PRICE[it]*(1+.25*lv('pb'))*(1+.25*(rb.inc||0))));inv[it]=have-n;if(!inv[it])delete inv[it];wheat+=g;earned+=g;totalEarned+=g;sv();return g};
+function popAt(t){const e=document.createElement('div');e.className='pop';e.style.cssText=`--x:${PA.x};--y:${PA.y}`;e.textContent=t;$('farm').append(e);setTimeout(()=>e.remove(),900)}
+async function act(fn){if(stop)throw 'STOP';const r=fn();st.ticks++;render();await sleep(delay());return r}
+const out=x=>{$('out').textContent+=(typeof x=='object'?JSON.stringify(x):x)+'\n'};
+const ITEM={wheat:'wheat',carrot:'carrot',pumpkin:'pumpkin',sunflower:'power',cactus:'cactus',melon:'melon',dragonfruit:'dragonfruit',bush:'wood',tree:'wood'};
+const IC={hay:'🌿',wheat:'🌾',wood:'🪵',carrot:'🥕',pumpkin:'🎃',power:'⚡',cactus:'🌵',melon:'🍉',dragonfruit:'🐲'};
+const ENT={Grass:'grass',Wheat:'wheat',Bush:'bush',Tree:'tree',Carrot:'carrot',Pumpkin:'pumpkin',Dead_Pumpkin:'dead_pumpkin',Sunflower:'sunflower',Cactus:'cactus',Melon:'melon',Dragonfruit:'dragonfruit'};
+const ITM={Hay:'hay',Wheat:'wheat',Wood:'wood',Carrot:'carrot',Pumpkin:'pumpkin',Power:'power',Cactus:'cactus',Melon:'melon',Dragonfruit:'dragonfruit',Coins:'coins',Water:'water',Fertilizer:'fertilizer'};
+const HATS={Straw_Hat:'👒',Brown_Hat:'🤠',Top_Hat:'🎩',Dinosaur_Hat:'🦖',Gold_Hat:'👑'};
+const UNL={Loops:'loops',Conditionals:'ifs',Variables:'vars',Operators:'logic',Functions:'funcs',Senses:'ground',Measure:'meas',Swap:'swp',Watering:'water',Fertilizer:'fert',Megafarm:'bay',Polyculture:'poly',Debug:'dbg',Hats:'hats',Auto_Unlock:'auto2',Inventory:'inv',Carrots:'crop_carrot',Pumpkins:'crop_pumpkin',Sunflowers:'crop_sunflower',Cactus:'crop_cactus',Bushes:'crop_bush',Trees:'crop_tree',Speed:'@mt',Expand:'@grid'};
+const RES={},EMP={n:0,g:[]},DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};let did=0;
+const uRes=u=>{let id=UNL[u]||u;const seq=id=='@mt'?['mt1','mt2','mt3','mt4','mt5']:id=='@grid'?[1,2,3,4,5,6,7,8,9].map(i=>'grid'+i):[id];id=seq.find(x=>!owned[x]);return id?[...NODES,...SHOP].find(x=>x.id==id)||null:null};
+const uCount=u=>{const id=UNL[u]||u;if(id=='@mt')return lv('mt');if(id=='@grid')return [1,2,3,4,5,6,7,8,9].filter(i=>owned['grid'+i]).length;return owned[id]?1:0};
+function purchase(o){wheat-=price(o);payM(o);owned[o.id]=1;if(o.id.startsWith('grid')){szOv=0;const f=farm(st);st.n=f.n;st.g=f.g}sv();render();upd()}
+function treeAdj(c){const n=st.n,i=st.g.indexOf(c);if(i<0)return 0;const x=i%n,y=(i/n)|0;let k=0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const o=st.g[((y+b+n)%n)*n+(x+a+n)%n];if(o&&o!==c&&o.t==2&&o.k=='tree')k++});return k}
+const clr=c=>{c.t=c.gr?0:1;c.gr=0;c.k=null;c.p=0;c.dead=0;c.wet=0};
+const isDead=c=>c.t==2&&c.k=='pumpkin'&&c.dead&&fr(c)>=.5;
+const comp=()=>{const l=['carrot','pumpkin','sunflower','bush','tree','cactus'].filter(k=>owned['crop_'+k]);return l.length?{k:l[Math.floor(Math.random()*l.length)],x:Math.floor(Math.random()*st.n),y:Math.floor(Math.random()*st.n)}:null};
+function sow(c,k){const gr=k=='bush'||k=='tree';if(c.t==1||(gr&&c.t==0)){c.gr=c.t==0?1:0;c.t=2;c.p=Date.now();c.k=k;c.w=0;c.wet=0;c.dead=k=='pumpkin'&&Math.random()<.2;c.pet=7+Math.floor(Math.random()*9);c.sz=Math.floor(Math.random()*10);c.cp=comp()}}
+function reap(c,x,y){PA={x,y};const n=st.n,k=c.k||'wheat';
+if(k=='pumpkin'&&c.dead){clr(c);return 0}
+let grp=[c];
+if(k=='cactus'){const seen=new Set([c]),q=[[x,y]];while(q.length){const [a,b]=q.pop();[[1,0],[-1,0],[0,1],[0,-1]].forEach(([i,j])=>{const X=(a+i+n)%n,Y=(b+j+n)%n,o=st.g[Y*n+X];if(o&&!seen.has(o)&&o.t==2&&o.k=='cactus'&&fr(o)>=1){seen.add(o);q.push([X,Y])}})}
+grp=[...seen];const at=(a,b)=>st.g[((b+n)%n)*n+(a+n)%n];let ok=true;grp.forEach(o=>{const i=st.g.indexOf(o),a=i%n,b=(i/n)|0,e=at(a+1,b),s2=at(a,b+1);if(grp.includes(e)&&e.sz<o.sz)ok=false;if(grp.includes(s2)&&s2.sz<o.sz)ok=false});if(!ok)grp=[c]}
+let v=k=='tree'?3:1;
+if(k=='sunflower'){const ps=st.g.filter(o=>o.t==2&&o.k=='sunflower'&&fr(o)>=1).map(o=>o.pet);if(ps.length>=5&&c.pet==Math.max(...ps))v*=5}
+if(owned.poly&&c.cp){const o=st.g[c.cp.y*n+c.cp.x];if(o&&o!==c&&o.t==2&&o.k==c.cp.k)v*=3}
+const m=grp.length;give(ITEM[k],k=='cactus'?v*m*m:v);grp.forEach(clr);return m}
+function autoH(d){const c=st.g[d.y*st.n+d.x];if(!c)return;if(c.t==2&&fr(c)>=1)reap(c,d.x,d.y);else if(c.t==0&&c.w){c.w=0;PA={x:d.x,y:d.y};give('hay',3*(1+.5*(rb.wild||0)))}}
+function mkEnv(d){const cell=()=>st.g[d.y*st.n+d.x],info=c=>({ground:['grass','soil','crop'][c.t],crop:c.t==2?(c.k||'wheat'):null,growth:c.t==2?Math.floor(fr(c)*4):-1}),
+chk=k=>{k=k||'wheat';if(!CROPS[k])throw new Error('plantAll() needs a crop such as wheat or carrot');if(k!='wheat'&&!owned['crop_'+k])throw new Error(`🔒 ${k} seeds are locked. Buy them in the 🛒 Shop.`);return k};
+const E={North:'up',East:'right',South:'down',West:'left',Entities:ENT,Items:ITM,Grounds:{Grassland:'grassland',Soil:'soil'},Hats:HATS,Unlocks:UNL,bush:'bush',tree:'tree',min:Math.min,max:Math.max,abs:Math.abs,up:'up',down:'down',left:'left',right:'right',wheat:'wheat',carrot:'carrot',pumpkin:'pumpkin',sunflower:'sunflower',cactus:'cactus',melon:'melon',dragonfruit:'dragonfruit',
+move:dr=>act(()=>{const n=st.n,v={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dr];if(!v)throw new Error('move() needs up, down, left or right');d.x=(d.x+v[0]+n)%n;d.y=(d.y+v[1]+n)%n;if(d.auto)autoH(d)}),
+till:()=>act(()=>{const c=cell();if(c.t==0){c.t=1;c.w=0}}),
+plant:k=>act(()=>{k=k||'wheat';if(!CROPS[k])throw new Error('plant() needs a crop such as wheat, carrot, pumpkin, sunflower, cactus, melon or dragonfruit');if(k!='wheat'&&!owned['crop_'+k])throw new Error(`🔒 ${k} seeds are locked. Buy them in the 🛒 Shop.`);sow(cell(),k)}),
+harvest:()=>act(()=>{const c=cell();if(c.t==1)return false;PA={x:d.x,y:d.y};
+if(c.t==0){if(!c.w)return false;c.w=0;give('hay',3*(1+.5*(rb.wild||0)));return true}
+if(fr(c)<1&&!isDead(c)){clr(c);return false}
+return reap(c,d.x,d.y)>0}),
+wait:async()=>{await act(()=>{});await sleep(1000)},
+water:()=>act(()=>{const c=cell();if(c.t==2){c.p-=cms(c)*.2;c.wet=1}}),
+fertilize:()=>act(()=>{const c=cell();if(c.t==2)c.p-=cms(c)*.5}),
+waterAll:()=>act(()=>{st.g.forEach(c=>{if(c.t==2)c.p-=cms(c)*.2})}),
+scanField:()=>{const o=[];for(let y=0;y<st.n;y++){const r=[];for(let x=0;x<st.n;x++)r.push(info(st.g[y*st.n+x]));o.push(r)}return o},
+fertilizeAll:()=>act(()=>{st.g.forEach(c=>{if(c.t==2)c.p-=cms(c)*.5})}),
+tillAll:()=>act(()=>{st.g.forEach(c=>{if(c.t==0){c.t=1;c.w=0}})}),
+teleport:(x,y)=>act(()=>{if(!(x>=0&&y>=0&&x<st.n&&y<st.n))throw new Error('teleport: x and y must be 0 to '+(st.n-1));d.x=x;d.y=y;if(d.auto)autoH(d)}),
+plantAll:k=>act(()=>{k=chk(k);st.g.forEach(c=>sow(c,k))}),
+harvestAll:()=>act(()=>{let n=0;st.g.forEach((c,i)=>{const x=i%st.n,y=(i/st.n)|0;if(c.t==2&&(fr(c)>=1||isDead(c))){n+=reap(c,x,y)}else if(c.t==0&&c.w){c.w=0;give('hay',3*(1+.5*(rb.wild||0)));n++}});return n}),
+timeWarp:async()=>{if(Date.now()<cd.tw)return false;cd.tw=Date.now()+60000;await act(()=>{st.g.forEach(c=>{if(c.t==2)c.p-=cms(c)*.3})});return true},
+autoHarvest:on=>{d.auto=!!on;return d.auto},
+overclock:()=>{if(Date.now()<cd.oc)return false;cd.on=Date.now()+20000;cd.oc=Date.now()+90000;return true},
+measure:dr=>{let c=cell();if(dr){const v=DIRS[dr];if(!v)throw new Error('measure() takes no argument, or up/down/left/right');c=st.g[((d.y+v[1]+st.n)%st.n)*st.n+(d.x+v[0]+st.n)%st.n]}return c.t==2?(c.k=='sunflower'?c.pet:c.k=='cactus'?c.sz:null):null},
+swap:dr=>act(()=>{const v=DIRS[dr];if(!v)throw new Error('swap() needs up, down, left or right');const c=cell(),o=st.g[((d.y+v[1]+st.n)%st.n)*st.n+(d.x+v[0]+st.n)%st.n];if(c.t!=2||o.t!=2)return false;for(const f of ['k','p','sz','pet','dead','cp','gr','wet']){const t=c[f];c[f]=o[f];o[f]=t}return true}),
+get_companion:()=>{const c=cell();return c.t==2&&c.cp?[c.cp.k,[c.cp.x,c.cp.y]]:null},
+get_entity_type:()=>{const c=cell();return c.t==2?(isDead(c)?'dead_pumpkin':c.k||'wheat'):c.t==0?'grass':null},
+get_ground_type:()=>{const c=cell();return c.t==1||(c.t==2&&!c.gr)?'soil':'grassland'},
+get_water:()=>{const c=cell();return c.t==2&&c.wet?1:0},
+can_harvest:()=>E.canHarvest(),get_pos_x:()=>d.x,get_pos_y:()=>d.y,get_world_size:()=>st.n,
+use_item:it=>{if(it=='water')return E.water();if(it=='fertilizer')return E.fertilize();throw new Error('use_item: try Items.Water or Items.Fertilizer')},
+num_items:it=>it=='coins'?wheat:(inv[it]||0),
+sell:(it,n)=>it==null?Object.keys(inv).reduce((t,k)=>t+sellItem(k),0):sellItem(it,n),
+get_cost:u=>{const o=uRes(u);return o?Object.assign({coins:price(o)},o.m||{}):null},
+num_unlocked:u=>uCount(u),
+unlock:u=>{const o=uRes(u);if(!o)return false;if(!(SHOP.includes(o)?canShop(o):canBuy(o)))return false;purchase(o);return true},
+spawn_drone:(n,...a)=>E.spawnDrone(n,...a),num_drones:()=>DS.length,max_drones:()=>maxD(),
+has_finished:id=>!!(RES[id]&&RES[id].done),
+wait_for:async id=>{const r=RES[id];if(!r)return null;await r.pr;return r.v},
+set_execution_speed:v=>{$('spd').value=Math.max(1,Math.min(10,+v||10));return true},
+set_world_size:v=>{v=Math.max(1,Math.min(SZ(),Math.floor(+v)||1));szOv=v>=SZ()?0:v;const f=farm(EMP);st.n=f.n;st.g=f.g;DS.forEach(q=>{q.x=0;q.y=0});render();return v},
+clear:()=>{const f=farm(EMP);st.n=f.n;st.g=f.g;d.x=0;d.y=0;d.hat='';render();return true},
+change_hat:h=>{d.hat=h;return true},
+canHarvest:()=>{const c=cell();return c.t==2?fr(c)>=1&&!isDead(c):c.t==0&&!!c.w},
+getGround:()=>['grass','soil','crop'][cell().t],getCrop:()=>{const c=cell();return c.t==2?(c.k||'wheat'):null},
+getGrowth:()=>{const c=cell();return c.t==2?Math.floor(fr(c)*4):-1},
+getX:()=>d.x,getY:()=>d.y,size:()=>st.n,getWheat:()=>wheat,getTicks:()=>st.ticks,print:out,
+peek:(x,y)=>{if(!(x>=0&&y>=0&&x<st.n&&y<st.n))throw new Error('peek: x and y must be 0 to '+(st.n-1));const c=st.g[y*st.n+x];return{ground:['grass','soil','crop'][c.t],crop:c.t==2?(c.k||'wheat'):null,growth:c.t==2?Math.floor(fr(c)*4):-1}},
+moveTo:async(x,y)=>{if(!(x>=0&&y>=0&&x<st.n&&y<st.n))throw new Error('moveTo: x and y must be 0 to '+(st.n-1));while(d.x!=x)await E.move('right');while(d.y!=y)await E.move('down')},
+spawnDrone:(name,...args)=>{if(DS.length>=maxD())return false;const sc=S.find(z=>z.n==name||z.n==name+'.js');if(!sc)throw new Error('spawnDrone: no script called '+name);const bad=lang(sc.c);if(bad)throw new Error(bad);
+const nd=newDrone(d.x,d.y),pr=runCode(sc.c,nd,args).then(v=>{RES[nd.id].done=1;RES[nd.id].v=v}).catch(e=>{RES[nd.id].done=1;if(e!=='STOP')out('⚠ drone '+nd.id+': '+(e&&e.message||e))}).finally(()=>{removeDrone(nd);pending.delete(pr)});RES[nd.id]={done:0,pr,v:null};pending.add(pr);return nd.id},
+droneId:()=>d.id,numDrones:()=>DS.length,maxDrones:()=>maxD(),
+runScript:async name=>{const sc=S.find(z=>z.n==name||z.n==name+'.js');if(!sc)throw new Error('runScript: no script called '+name);if((d.depth||0)>=20)throw new Error('runScript: scripts are nested too deeply');const bad=lang(sc.c);if(bad)throw new Error(bad);
+d.depth=(d.depth||0)+1;try{return await new AFn(...Object.keys(E),xform(sc.c))(...Object.values(E))}finally{d.depth--}},
+__y:async()=>{if(stop)throw 'STOP';if(++yc%100==0)await sleep(0)}};
+lock(E);return E}
+const API=['move','till','plant','harvest','wait','canHarvest','getX','getY','size','print','water','getGround','getGrowth','moveTo','getWheat','getTicks','runScript','getCrop','fertilize','peek','waterAll','spawnDrone','droneId','numDrones','maxDrones','scanField','fertilizeAll','tillAll','teleport','plantAll','harvestAll','timeWarp','autoHarvest','overclock','can_harvest','get_pos_x','get_pos_y','get_world_size','get_entity_type','get_ground_type','get_water','measure','swap','use_item','get_companion','num_items','get_cost','unlock','num_unlocked','spawn_drone','num_drones','max_drones','has_finished','wait_for','set_execution_speed','set_world_size','clear','change_hat','sell'];
+const NODES=[
+{id:'till',ic:'⛏',n:'Tilling',c:10,r:[],t:1,cmds:['till']},
+{id:'plant',ic:'🌱',n:'Sowing',c:12,r:['till'],t:2,cmds:['plant']},
+{id:'loops',ic:'🔁',n:'For Loops',c:30,r:['plant'],t:3,note:'for (...) { }'},
+{id:'ifs',ic:'🔀',n:'Conditionals',c:45,r:['plant'],t:3,note:'if / else'},
+{id:'wait',ic:'⏳',n:'Patience',c:10,r:['plant'],t:3,cmds:['wait']},
+{id:'ledger',ic:'📒',n:'Ledger',c:25,r:['plant'],t:3,cmds:['getWheat','getTicks']},
+{id:'vars',ic:'📦',n:'Variables',c:60,r:['loops'],t:4,note:'let / const'},
+{id:'whileL',ic:'♾',n:'While Loops',c:90,r:['loops'],t:4,note:'while (...) { }'},
+{id:'ctl',ic:'🚦',n:'Loop Control',c:80,r:['loops'],t:4,note:'break / continue'},
+{id:'logic',ic:'🧠',n:'Logic Operators',c:100,r:['ifs'],t:4,note:'&& and ||'},
+{id:'ripe',ic:'\u{1F33E}',n:'Ripeness Check',c:70,r:['plant','ifs'],t:4,cmds:['canHarvest','can_harvest']},
+{id:'ground',ic:'👁',n:'Soil Sense',c:55,r:['plant'],t:4,cmds:['getGround','get_ground_type','get_entity_type','get_pos_x']},
+{id:'growth',ic:'📈',n:'Growth Meter',c:70,r:['plant'],t:4,cmds:['getGrowth','get_water']},
+{id:'funcs',ic:'🧩',n:'Functions',c:180,r:['loops','vars'],t:5,note:'function name() { }'},
+{id:'math',ic:'➗',n:'Math Library',c:120,r:['vars'],t:5,note:'Math.random() ...'},
+{id:'water',ic:'💧',n:'Watering Can',c:150,r:['growth','wait'],t:5,cmds:['water']},
+{id:'scan',ic:'📡',n:'Field Scanner',c:260,r:['ground','growth'],t:5,cmds:['peek']},
+{id:'fert',ic:'🧪',n:'Fertilizer',c:300,r:['water'],t:6,cmds:['fertilize']},
+{id:'bay',ic:'🛸',n:'Drone Bay',c:500,r:['loops','vars'],t:5,cmds:['spawnDrone','numDrones','maxDrones','droneId','spawn_drone','num_drones','max_drones','has_finished','wait_for']},
+{id:'spr',ic:'🚿',n:'Sprinkler',c:2500,r:['water'],t:6,rq:1,cmds:['waterAll']},
+{id:'goto',ic:'🧭',n:'Autopilot Nav',c:220,r:['ground','ripe'],t:6,cmds:['moveTo']},
+{id:'scanf',ic:'🛰',n:'Satellite Scan',c:6000,r:['scan'],t:7,rq:2,cmds:['scanField']},
+{id:'fall',ic:'🧴',n:'Mass Fertilizer',c:9000,r:['fert','spr'],t:7,rq:2,cmds:['fertilizeAll']},
+{id:'tall',ic:'🚜',n:'Tractor',c:15000,r:['till'],t:7,rq:3,cmds:['tillAll']},
+{id:'tele',ic:'🌀',n:'Teleporter',c:12000,r:['goto'],t:7,rq:3,cmds:['teleport']},
+{id:'pall',ic:'🌰',n:'Seed Drill',c:40000,r:['tall','plant'],t:8,rq:4,cmds:['plantAll']},
+{id:'hall',ic:'🛻',n:'Combine Harvester',c:120000,r:['pall'],t:8,rq:5,cmds:['harvestAll']},
+{id:'warp',ic:'⏩',n:'Time Warp',c:250000,r:['fall'],t:8,rq:6,cmds:['timeWarp']},
+{id:'auto',ic:'🤖',n:'Auto Harvest AI',c:500000,r:['hall'],t:8,rq:8,cmds:['autoHarvest']},
+{id:'oc',ic:'🔥',n:'Overclock',c:1000000,r:['warp'],t:8,rq:10,cmds:['overclock']},
+{id:'inv',ic:'🎒',n:'Inventory',c:40,r:['plant'],t:3,cmds:['num_items']},
+{id:'hats',ic:'🎩',n:'Hat Stand',c:100,r:['plant'],t:3,cmds:['change_hat']},
+{id:'dbg',ic:'🐞',n:'Debug Tools',c:200,r:['loops'],t:4,cmds:['set_execution_speed','set_world_size','clear']},
+{id:'meas',ic:'📏',n:'Measuring Tape',c:250,r:['ground'],t:5,cmds:['measure']},
+{id:'swp',ic:'🔃',n:'Swap Arm',c:600,r:['meas'],t:5,cmds:['swap']},
+{id:'auto2',ic:'📜',n:'Auto-Unlock',c:800,r:['vars'],t:5,cmds:['unlock','get_cost','num_unlocked']},
+{id:'poly',ic:'🧬',n:'Polyculture',c:1500,r:['meas','ripe'],t:6,cmds:['get_companion']},
+{id:'mkt',ic:'🏪',n:'Market Stall',c:60,r:['inv'],t:4,cmds:['sell']}];
+const LKEY={loops:['for loops',/\bfor\b/],ifs:['if statements',/\bif\b/],vars:['variables',/\b(let|const|var)\b/],whileL:['while loops',/\bwhile\b/],funcs:['functions',/\bfunction\b|=>/],logic:['logic operators (&& ||)',/&&|\|\|/],math:['the Math library',/\bMath\b/],ctl:['break / continue',/\b(break|continue)\b/]};
+const BOOK=[
+['move(direction)',null,'1 tick','nothing','Fly one tile: up, down, left or right. The map wraps around the edges.','move(right)'],
+['harvest()',null,'1 tick','true / false','Cut what is below you. Wild grass: 3 hay, and it never grows back. A ripe planted crop goes into your inventory as its own item (wheat gives wheat, carrots give carrots, bushes and trees give wood) but it is destroyed if unripe; the tile becomes soil. Sell items in the 🛒 Shop or with sell().','harvest()'],
+['print(value)',null,'free','nothing','Write any value in the output box.','print(getX())'],
+['runScript(name)',null,'free','nothing','Run another script from your tabs, for example one that plants a row. Split big programs into small scripts. Press ＋ next to the tabs to add a script, double-click a tab to rename it.','runScript(`plant-row`)'],
+['size()',null,'free','number','Width of the square farm.','for (let i = 0; i < size(); i++) { }'],
+['getX() / getY()',null,'free','number','Your column / row, from 0 at the top-left.','if (getX() == 0) { }'],
+['till()','till','1 tick','nothing','Turn grass into soil (the wild wheat is gone).','till()'],
+['plant(crop)','plant','1 tick','nothing','Sow a crop on soil. Wheat by default. Buy more seeds in the 🛒 Shop: carrot, pumpkin, sunflower, cactus, melon. Each has its own ripening time and payout.','plant(carrot)'],
+['wait()','wait','1 second','nothing','Pause for one second while crops grow.','wait()'],
+['canHarvest()','ripe','free','true / false','Is the wheat below you ripe?','if (canHarvest()) harvest()'],
+['getGround()','ground','free','grass, soil or crop','What is below you?','print(getGround())'],
+['getCrop()',null,'free','crop name or null','Which crop is planted below you?','if (getCrop() == carrot) { }'],
+['spawnDrone(script)','bay','free','drone id or false','Launch another drone running the script tab with that name, starting where you are. Returns false when every drone slot is in use. A drone vanishes when its script ends.','spawnDrone(`row-farmer`)'],
+['numDrones() / maxDrones()','bay','free','number','Drones flying now / drone slots you own.','print(numDrones())'],
+['droneId()','bay','free','number','0 for the main drone, 1, 2, 3... for spawned ones. Use it to give each drone its own row.','moveTo(0, droneId())'],
+['waterAll()','spr','1 tick','nothing','Water every crop in the field at once (20% closer to ripe). Needs Rebirth 1.','waterAll()'],
+['scanField()','scanf','free','2D array','Rows of peek() results for the whole field: scanField()[y][x]. Needs Rebirth 2.','print(scanField()[0][0].crop)'],
+['fertilizeAll()','fall','1 tick','nothing','Fertilize every crop at once (50% closer to ripe). Needs Rebirth 2.','fertilizeAll()'],
+['tillAll()','tall','1 tick','nothing','Turn every grass tile into soil at once. Needs Rebirth 3.','tillAll()'],
+['teleport(x, y)','tele','1 tick','nothing','Jump to any tile instantly, however far. Needs Rebirth 3.','teleport(5, 5)'],
+['plantAll(crop)','pall','1 tick','nothing','Plant a crop on every soil tile at once. Needs Rebirth 4.','plantAll(carrot)'],
+['harvestAll()','hall','1 tick','number','Harvest every ripe crop and wild wheat in the field; returns how many. Needs Rebirth 5.','harvestAll()'],
+['timeWarp()','warp','1 tick','true / false','Push every crop 30% closer to ripe. 60 s cooldown, returns false while cooling down. Needs Rebirth 6.','timeWarp()'],
+['autoHarvest(on)','auto','free','true / false','While on, this drone harvests any ripe tile it lands on, for free. Needs Rebirth 8.','autoHarvest(true)'],
+['overclock()','oc','free','true / false','All drones act 3x faster for 20 s. 90 s cooldown. Needs Rebirth 10.','overclock()'],
+['measure() / measure(dir)','meas','free','number or null','Sunflower: petal count (7-15). Cactus: size (0-9). With a direction it measures the neighbouring tile.','print(measure())'],
+['swap(direction)','swp','1 tick','true / false','Swap the plants on this tile and the neighbouring one. Sort cacti (sizes never shrink going East or South) so they chain-harvest for size² payout.','swap(East)'],
+['get_companion()','poly','free','[crop, [x, y]] or null','The crop this plant wants as a neighbour and the tile it wants it on. If that crop stands there when you harvest, the payout triples.','print(get_companion())'],
+['num_items(item)','inv','free','number','Items in your inventory: Items.Hay, Wheat, Carrot, Pumpkin, Power, Cactus, Melon, Dragonfruit, Wood, or Items.Coins.','print(num_items(Items.Wood))'],
+['sell(item, amount)','mkt','free','coins earned','Sell items for coins. sell(Items.Carrot) sells all your carrots, sell(Items.Carrot, 5) sells five, sell() sells everything. Prices per item: Hay 1, Wheat 1, Carrot 3, Pumpkin 9, Power (sunflower) 22, Cactus 45, Melon 90, Dragonfruit 160, Wood 2, plus your payout boosts.','sell(Items.Wheat)'],
+['use_item(item)','water','1 tick','nothing','Items.Water waters the tile, Items.Fertilizer fertilizes it (you need those skills).','use_item(Items.Water)'],
+['unlock(name) / get_cost(name) / num_unlocked(name)','auto2','free','bool / {coins} / number','Buy skills and shop items from code. Names: Unlocks.Loops, Variables, Functions, Watering, Megafarm, Bushes, Trees, Carrots, Pumpkins, Sunflowers, Cactus, Polyculture, Speed, Expand ...','unlock(Unlocks.Expand)'],
+['spawn_drone(script, ...args) / has_finished(id) / wait_for(id)','bay','free','id / bool / value','Like spawnDrone, plus arguments (read them from the args array). has_finished tells whether a drone is done; wait_for waits for it and returns what its script returned.','spawn_drone(`worker`, 3)'],
+['set_execution_speed(n) / set_world_size(n) / clear()','dbg','free','nothing','Debugging: set the drone speed 1-10; shrink and wipe the field to test small; wipe the field and send the drone home.','set_world_size(3)'],
+['change_hat(hat)','hats','free','nothing','Put a hat on this drone: Hats.Straw_Hat, Brown_Hat, Top_Hat, Dinosaur_Hat, Gold_Hat.','change_hat(Hats.Top_Hat)'],
+['Python-style names',null,'free','varies','Also available: can_harvest(), get_pos_x(), get_pos_y(), get_world_size(), get_ground_type(), get_entity_type() (Entities.Carrot ...), get_water(), num_drones(), max_drones(), min(), max(), abs(), and the directions North, East, South, West.','move(North)'],
+['getGrowth()','growth','free','0 to 4, or -1','Growth stage of the crop below you (4 = ripe, -1 = no crop).','print(getGrowth())'],
+['water()','water','1 tick','nothing','The crop below you gets 20% closer to ripe.','water()'],
+['fertilize()','fert','1 tick','nothing','The crop below you gets 50% closer to ripe.','fertilize()'],
+['peek(x, y)','scan','free','object','Look at any tile: returns {ground, crop, growth}.','print(peek(2, 3).crop)'],
+['moveTo(x, y)','goto','1 tick per tile','nothing','Fly to a tile: right first, then down (wrapping).','moveTo(2, 3)'],
+['getWheat() / getTicks()','ledger','free','number','Coins you own / actions taken so far.','print(getWheat())']];
+const LANG=[['For loop','loops','for (let i = 0; i < 5; i++) { ... }'],['While loop','whileL','while (true) { ... }'],['if / else','ifs','if (canHarvest()) { harvest() } else { wait() }'],['Variables','vars','let n = 3;  n = n + 1'],['Functions','funcs','function tend() { ... }   then call tend()'],['Compare','ifs','==  !=  <  >  <=  >='],['And / or','logic','a && b    a || b'],['Maths','math','Math.random(), Math.floor(x), % (remainder)'],['break / continue','ctl','break leaves a loop; continue skips to the next round']];
+const lock=env=>NODES.forEach(nd=>(nd.cmds||[]).forEach(k=>{const f=env[k];if(!f)return;env[k]=(...a)=>{if(!owned[nd.id])throw new Error(`🔒 ${k}() is locked. Unlock ${nd.n} in the 🌳 Skill Tree (🪙 ${nd.c}).`);return f(...a)}}));
+function lang(src){const s=src.replace(/\/\/.*|\/\*[\s\S]*?\*\//g,'').replace(/\bfor\s*\((?:[^()]|\([^()]*\))*\)/g,'for()');
+for(const id in LKEY){const nd=NODES.find(x=>x.id==id);if(LKEY[id][1].test(s)&&!owned[id])return `🔒 Your code uses ${LKEY[id][0]}, which are locked.\nUnlock ${nd.n} in the 🌳 Skill Tree (🪙 ${nd.c}).`}}
+function xform(src){
+const fns=[...src.matchAll(/function\s+([A-Za-z_$][\w$]*)/g)].map(m=>m[1]);
+let s=src.replace(/function\s+([A-Za-z_$][\w$]*)/g,'async function $1');
+s=s.replace(new RegExp('(?<![\\w$.])(?<!function\\s+)('+[...API,...fns].join('|')+')\\s*\\(','g'),'await $1(');
+return s.replace(/\b(while|for)\s*(\((?:[^()]|\([^()]*\))*\))\s*\{/g,'$1 $2 { await __y();')}
+$('run').onclick=async()=>{if(!stop)return;S[cur].c=ed.value;const bad=lang(ed.value);$('out').textContent='';if(bad){out(bad);return}
+stop=false;D0.depth=0;pending.clear();
+try{await runCode(ed.value,D0);out('Main script finished.')}catch(e){if(e!=='STOP')out('⚠ '+(e&&e.message||e))}
+while(pending.size&&!stop)await Promise.race([...pending,sleep(300)]);
+stop=true;DS.slice(1).forEach(removeDrone);render()};
+$('stop').onclick=()=>{stop=true};
+const ed=$('code'),SIG={},LH=20,PAD=6;
+BOOK.forEach(b=>b[0].split(' / ').forEach(x=>{SIG[x.split('(')[0]]=x}));
+const SNIP={for:'for (let i = 0; i < 5; i++) {\n  |\n}',while:'while (true) {\n  |\n}',if:'if (|) {\n  \n}',else:'else {\n  |\n}',function:'function name() {\n  |\n}',let:'let |',const:'const |'};
+const KWL={for:'loops',while:'whileL',if:'ifs',let:'vars',const:'vars',var:'vars',function:'funcs',break:'ctl',continue:'ctl',Math:'math'};
+const KWS=['for','while','if','else','let','const','var','function','return','break','continue','true','false','Math'];
+const cmdLock=c=>NODES.some(n=>n.cmds&&n.cmds.includes(c)&&!owned[n.id]);
+function hi(src){const fns=[...src.matchAll(/function\s+([A-Za-z_$][\w$]*)/g)].map(m=>m[1]);
+return src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/(\/\/.*|\/\*[\s\S]*?\*\/)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`)|\b(\d+(?:\.\d+)?)\b|([A-Za-z_$][\w$]*)/g,(m,c,q,n,w)=>{
+if(c)return `<span class='hc'>${c}</span>`;if(q)return `<span class='hs'>${q}</span>`;if(n)return `<span class='hn'>${n}</span>`;
+if(KWS.includes(w))return `<span class='${KWL[w]&&!owned[KWL[w]]?'hx':'hk'}'>${w}</span>`;
+if(API.includes(w))return `<span class='${cmdLock(w)?'hx':'hf'}'>${w}</span>`;
+if(fns.includes(w))return `<span class='hf'>${w}</span>`;
+if(CONSTS.includes(w))return `<span class='hn'>${w}</span>`;return m})}
+function pos(){const b=ed.value.slice(0,ed.selectionStart).split('\n');return{l:b.length-1,c:b[b.length-1].length}}
+function upd(){const v=ed.value;$('hl').innerHTML=hi(v)+'\n ';const n=v.split('\n').length;$('ln').textContent=Array.from({length:n},(_,i)=>i+1).join('\n');sync()}
+function sync(){$('hl').scrollTop=ed.scrollTop;$('hl').scrollLeft=ed.scrollLeft;$('ln').scrollTop=ed.scrollTop;sel()}
+function sel(){const p=pos();$('pos').textContent=`Ln : ${p.l+1}    Col : ${p.c+1}    Sel : ${Math.abs(ed.selectionEnd-ed.selectionStart)}    length : ${ed.value.length}`;$('cl').style.top=(PAD+p.l*LH-ed.scrollTop)+'px'}
+function ins(t){if(!document.execCommand('insertText',false,t))ed.setRangeText(t,ed.selectionStart,ed.selectionEnd,'end')}
+let A={on:0,list:[],i:0,len:0},skip=0;
+function hide(){A.on=0;$('ac').style.display='none'}
+function cands(pre){const v=ed.value,l=pre.toLowerCase(),o=[];
+API.forEach(w=>{const sg=SIG[w]||w+'()';o.push({w,d:sg,ins:/\(\s*\w/.test(sg)?w+'(|)':w+'()',lk:cmdLock(w)})});
+KWS.forEach(w=>o.push({w,d:SNIP[w]?'snippet':'keyword',ins:SNIP[w]||w,lk:!!(KWL[w]&&!owned[KWL[w]])}));
+CONSTS.forEach(w=>o.push({w,d:CROPS[w]?'crop':'direction',ins:w,lk:!!(CROPS[w]&&w!='wheat'&&!owned['crop_'+w])}));
+new Set([...v.matchAll(/function\s+([A-Za-z_$][\w$]*)/g)].map(m=>m[1])).forEach(w=>o.push({w,d:'your function',ins:w+'()'}));
+new Set([...v.matchAll(/\b(?:let|const|var)\s+([A-Za-z_$][\w$]*)/g)].map(m=>m[1])).forEach(w=>o.push({w,d:'your variable',ins:w}));
+return o.filter(x=>x.w.toLowerCase().startsWith(l)&&!(x.w==pre&&x.d.startsWith('your'))).slice(0,8)}
+function acShow(force){if(skip){skip=0;return}const before=ed.value.slice(0,ed.selectionStart),m=/[A-Za-z_$][\w$]*$/.exec(before);
+if(!m&&!force){hide();return}if(m&&before[before.length-m[0].length-1]=='.'){hide();return}
+const pre=m?m[0]:'',l=cands(pre);if(!l.length){hide();return}A={on:1,list:l,i:0,len:pre.length};acDraw()}
+function acDraw(){const a=$('ac'),p=pos(),c=document.createElement('canvas').getContext('2d');c.font='14px ui-monospace,Menlo,Consolas,monospace';
+a.style.display='block';a.style.left=Math.max(0,Math.min($('ln').offsetWidth+8+(p.c-A.len)*c.measureText('M').width-ed.scrollLeft,ed.clientWidth-200))+'px';
+a.style.top=(PAD+(p.l+1)*LH-ed.scrollTop+1)+'px';
+a.innerHTML=A.list.map((x,j)=>`<div class='ai${j==A.i?' on':''}' data-i='${j}'><b class='${x.lk?'hx':''}'>${x.w}</b><span>${x.lk?'🔒 ':''}${esc(x.d||'')}</span></div>`).join('')}
+function acAccept(i){const x=A.list[i];if(!x)return;const s=ed.selectionStart,ind=ed.value.slice(0,s).split('\n').pop().match(/^\s*/)[0];
+let t=x.ins.replace(/\n/g,'\n'+ind);const k=t.indexOf('|');if(k>=0)t=t.replace('|','');const st0=s-A.len;
+hide();skip=1;ed.setSelectionRange(st0,s);ins(t);if(k>=0)ed.setSelectionRange(st0+k,st0+k);skip=0;upd()}
+const PR={'(':')','[':']','{':'}',"'":"'",'"':'"','`':'`'};
+ed.addEventListener('keydown',e=>{
+if(A.on){if(e.key=='ArrowDown'||e.key=='ArrowUp'){e.preventDefault();A.i=(A.i+(e.key=='ArrowDown'?1:A.list.length-1))%A.list.length;acDraw();return}
+if(e.key=='Enter'||e.key=='Tab'){e.preventDefault();acAccept(A.i);return}
+if(e.key=='Escape'){hide();return}}
+if(e.ctrlKey&&e.code=='Space'){e.preventDefault();acShow(1);return}
+if(e.key=='F5'||(e.ctrlKey&&e.key=='Enter')){e.preventDefault();$('run').click();return}
+const v=ed.value,s=ed.selectionStart,en=ed.selectionEnd,pv=v[s-1]||'',nx=v[s]||'',a=v.lastIndexOf('\n',s-1)+1;
+if(e.ctrlKey&&e.key=='d'){e.preventDefault();const b=v.indexOf('\n',en),e2=b<0?v.length:b;ed.setSelectionRange(e2,e2);ins('\n'+v.slice(a,e2));return}
+if(e.ctrlKey&&e.key=='/'){e.preventDefault();const b0=v.indexOf('\n',en),b=b0<0?v.length:b0,L=v.slice(a,b).split('\n'),all=L.every(x=>/^\s*\/\//.test(x)||!x.trim()),n=L.map(x=>all?x.replace(/^(\s*)\/\/ ?/,'$1'):x.replace(/^(\s*)/,'$1// ')).join('\n');ed.setSelectionRange(a,b);ins(n);ed.setSelectionRange(a,a+n.length);return}
+if(e.key=='Tab'){e.preventDefault();if(e.shiftKey){const m=/^ {1,2}/.exec(v.slice(a));if(m){ed.setSelectionRange(a,a+m[0].length);document.execCommand('delete');const q=Math.max(a,s-m[0].length);ed.setSelectionRange(q,q)}}else ins('  ');return}
+if(e.key=='Enter'){e.preventDefault();const ind=v.slice(a,s).match(/^\s*/)[0];
+if(pv=='{'&&nx=='}'){ins('\n'+ind+'  \n'+ind);const q=s+1+ind.length+2;ed.setSelectionRange(q,q)}else ins('\n'+ind+(pv=='{'?'  ':''));return}
+if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&s==en){
+if([')',']','}',"'",'"','`'].includes(e.key)&&nx==e.key){e.preventDefault();ed.setSelectionRange(s+1,s+1);return}
+if(PR[e.key]&&!(/\w/.test(pv)&&["'",'"','`'].includes(e.key))){e.preventDefault();ins(e.key+PR[e.key]);ed.setSelectionRange(s+1,s+1);return}
+if(e.key=='Backspace'&&PR[pv]&&PR[pv]==nx){e.preventDefault();ed.setSelectionRange(s-1,s+1);document.execCommand('delete')}}});
+ed.addEventListener('input',()=>{S[cur].c=ed.value;upd();acShow()});
+ed.addEventListener('scroll',()=>{sync();if(A.on)hide()});
+['keyup','click'].forEach(t=>ed.addEventListener(t,e=>{sel();if(t=='click'||['ArrowLeft','ArrowRight','Home','End'].includes(e.key))hide()}));
+ed.addEventListener('blur',()=>setTimeout(hide,150));
+$('ac').addEventListener('mousedown',e=>{e.preventDefault();const d=e.target.closest('[data-i]');if(d)acAccept(+d.dataset.i)});
+let S=[{n:'farm.js',c:ed.value}],cur=0,depth=0;
+function tabs(){fsel();$('tabs').innerHTML=S.map((x,i)=>`<div class='tb${i==cur?' on':''}' data-i='${i}'>📄 <span>${esc(x.n)}</span>${S.length>1?`<i data-x='${i}'>✕</i>`:''}</div>`).join('')+`<div class='tb add' data-add='1' title='New script'>＋</div>`}
+function openTab(i){cur=i;ed.value=S[cur].c;hide();upd();tabs()}
+$('tabs').addEventListener('click',e=>{if(e.target.tagName=='INPUT')return;const x=e.target.closest('[data-x]'),t=e.target.closest('[data-i]'),ad=e.target.closest('[data-add]');
+if(x){const i=+x.dataset.x;S[cur].c=ed.value;S.splice(i,1);if(i<cur||cur>=S.length)cur--;openTab(cur);return}
+if(ad){S[cur].c=ed.value;let k=S.length+1,n;while(S.some(z=>z.n==(n='script'+k+'.js')))k++;S.push({n,c:'// '+n+'\n'});openTab(S.length-1);ed.focus();return}
+if(t&&+t.dataset.i!=cur){S[cur].c=ed.value;openTab(+t.dataset.i)}});
+$('tabs').addEventListener('dblclick',e=>{const t=e.target.closest('[data-i]');if(!t||e.target.closest('[data-x]'))return;const i=+t.dataset.i,sp=t.querySelector('span'),inp=document.createElement('input');
+inp.value=S[i].n;inp.style.cssText='width:110px;font:inherit';sp.replaceWith(inp);inp.focus();inp.select();
+inp.onblur=()=>{const v=inp.value.trim().replace(/[^\w.-]/g,'_')||S[i].n;if(!S.some((z,j)=>j!=i&&z.n==v))S[i].n=v;tabs()};
+inp.onkeydown=ev=>{if(ev.key=='Enter')inp.blur();if(ev.key=='Escape'){inp.value=S[i].n;inp.blur()}}});
+
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const hasM=o=>!o.m||Object.entries(o.m).every(([k,q])=>(inv[k]||0)>=q),payM=o=>Object.entries(o.m||{}).forEach(([k,q])=>{inv[k]-=q;if(!inv[k])delete inv[k]}),matStr=o=>Object.entries(o.m||{}).map(([k,q])=>`${IC[k]} ${inv[k]||0}/${q}`).join(' '),costStr=o=>[`🪙 ${price(o)}`].concat(Object.entries(o.m||{}).map(([k,q])=>`${IC[k]} ${q}`)).join(' + ');
+const price=x=>Math.ceil(x.c*(1-.05*(rb.dis||0))),canBuy=n=>!owned[n.id]&&n.r.every(r=>owned[r])&&rebirths>=(n.rq||0)&&wheat>=price(n)&&hasM(n);
+function buy(i){const n=NODES[i];if(!canBuy(n))return;wheat-=price(n);payM(n);owned[n.id]=1;sv();if(n.id.startsWith('grid')){const f=farm(st);st.n=f.n;st.g=f.g}render();upd();ov(1)}
+function closeOv(){$('ov').style.display='none'}
+function ov0(tab){const nm=id=>NODES.find(x=>x.id==id).n;
+let h=`<div class='tabs'><button class='${tab?'g':''}' onclick='ov(0)'>📖 Book</button><button class='${tab?'':'g'}' onclick='ov(1)'>🌳 Skill Tree</button><span style='flex:1'></span><button class='g' onclick='closeOv()'>✕</button></div>`;
+if(!tab){h+='<h2>📖 The Drone Handbook</h2><p>Every command and language feature. Locked ones must be bought in the Skill Tree.</p>'+BOOK.map(b=>{const lk=b[1]&&!owned[b[1]];return `<div class='bk ${lk?'lk':''}'><b><code>${esc(b[0])}</code></b> ${lk?'🔒 needs '+nm(b[1]):'✅'} <span style='color:var(--mut)'>· ${b[2]} · returns ${b[3]}</span><br>${b[4]}<br>Example: <code>${esc(b[5])}</code></div>`}).join('')+'<h3>Language features</h3>'+LANG.map(l=>{const lk=!owned[l[1]];return `<div class='bk ${lk?'lk':''}'><b>${l[0]}</b> ${lk?'🔒 needs '+nm(l[1]):'✅'}: <code>${esc(l[2])}</code></div>`}).join('')}
+else{h+=`<h2>🌳 Skill Tree</h2><p>You have 🪙 ${wheat}. Spending coins and materials here removes them from your stock. Many skills also cost items such as wheat, wood or carrots.</p>`+[1,2,3,4,5,6,7,8].map(t=>`<div class='ar'>${t>1?'⬇':''}</div><b>Tier ${t}</b><div class='nodes'>`+NODES.filter(n=>n.t==t).map(n=>{const o=owned[n.id],b=canBuy(n);return `<div class='nd ${o?'owned':b?'':'lock'}'>${n.ic} <b>${n.n}</b><br><code>${n.cmds?n.cmds.map(c=>c+'()').join(' '):esc(n.note)}</code><br>${n.rq&&rebirths<n.rq?'🔒 Rebirth '+n.rq+' required<br>':''}${n.r.length&&!o?'needs '+n.r.map(nm).join(' + ')+'<br>':''}${!o&&n.m?'Materials: '+matStr(n)+'<br>':''}${o?'✅ Unlocked':`<button class='${b?'':'g'}' ${b?'':'disabled'} onclick='buy(${NODES.indexOf(n)})'>Unlock · ${costStr(n)}</button>`}</div>`}).join('')+'</div>').join('')}
+$('ovb').innerHTML=h;$('ov').style.display='flex'}
+const cropd=k=>`<code>plant(${k})</code> · ripe in ${CROPS[k].ms/1000} s · gives ${ITEM[k]} · sells for ${PRICE[ITEM[k]]*(k=='tree'?3:1)} 🪙`;
+const SHOP=[
+{id:'crop_bush',ic:'🌳',n:'Bush seeds',c:40,r:[],kind:'crop',d:cropd('bush')+' · grows on grass'},
+{id:'crop_tree',ic:'🌲',n:'Tree seeds',c:150,r:['crop_bush'],kind:'crop',d:cropd('tree')+' · grows on grass, slower next to other trees'},
+{id:'crop_carrot',ic:'🥕',n:'Carrot seeds',c:60,r:[],kind:'crop',d:cropd('carrot')},
+{id:'crop_pumpkin',ic:'🎃',n:'Pumpkin seeds',c:250,r:['crop_carrot'],kind:'crop',d:cropd('pumpkin')},
+{id:'crop_sunflower',ic:'🌻',n:'Sunflower seeds',c:800,r:['crop_pumpkin'],kind:'crop',d:cropd('sunflower')},
+{id:'crop_cactus',ic:'🌵',n:'Cactus seeds',c:2000,r:['crop_sunflower'],kind:'crop',d:cropd('cactus')},
+{id:'crop_melon',ic:'🍉',n:'Melon seeds',c:5000,r:['crop_cactus'],kind:'crop',d:cropd('melon')},
+{id:'crop_dragonfruit',ic:'🐲',n:'Dragonfruit seeds',c:20000,r:['crop_melon'],rq:1,kind:'crop',d:cropd('dragonfruit')},
+{id:'grid1',ic:'🗺',n:'Field 4×4',c:60,r:[],kind:'grid',d:'16 tiles'},
+{id:'grid2',ic:'🗺',n:'Field 5×5',c:150,r:['grid1'],kind:'grid',d:'25 tiles'},
+{id:'grid3',ic:'🗺',n:'Field 6×6',c:400,r:['grid2'],kind:'grid',d:'36 tiles'},
+{id:'grid4',ic:'🗺',n:'Field 8×8',c:1000,r:['grid3'],kind:'grid',d:'64 tiles'},
+{id:'grid5',ic:'🗺',n:'Field 10×10',c:2500,r:['grid4'],kind:'grid',d:'100 tiles'},
+{id:'grid6',ic:'🗺',n:'Field 12×12',c:6000,r:['grid5'],kind:'grid',d:'144 tiles'},
+{id:'grid7',ic:'🗺',n:'Field 16×16',c:15000,r:['grid6'],kind:'grid',d:'256 tiles'},
+{id:'grid8',ic:'🗺',n:'Field 20×20',c:40000,r:['grid7'],rq:1,kind:'grid',d:'400 tiles'},
+{id:'grid9',ic:'🗺',n:'Field 24×24',c:100000,r:['grid8'],rq:2,kind:'grid',d:'576 tiles'},
+{id:'hg1',ic:'🛸',n:'Hangar I',c:500,r:[],kind:'drone',d:'Max drones: 2'},
+{id:'hg2',ic:'🛸',n:'Hangar II',c:2000,r:['hg1'],kind:'drone',d:'Max drones: 3'},
+{id:'hg3',ic:'🛸',n:'Hangar III',c:6000,r:['hg2'],kind:'drone',d:'Max drones: 4'},
+{id:'hg4',ic:'🛸',n:'Hangar IV',c:15000,r:['hg3'],rq:1,kind:'drone',d:'Max drones: 5'},
+{id:'hg5',ic:'🛸',n:'Hangar V',c:40000,r:['hg4'],rq:1,kind:'drone',d:'Max drones: 6'},
+{id:'hg6',ic:'🛸',n:'Hangar VI',c:100000,r:['hg5'],rq:2,kind:'drone',d:'Max drones: 7'},
+{id:'hg7',ic:'🛸',n:'Hangar VII',c:250000,r:['hg6'],rq:2,kind:'drone',d:'Max drones: 8'},
+{id:'mt1',ic:'⚡',n:'Motors I',c:300,r:[],kind:'drone',d:'Drones act 1.5× faster'},
+{id:'mt2',ic:'⚡',n:'Motors II',c:1200,r:['mt1'],kind:'drone',d:'2× faster'},
+{id:'mt3',ic:'⚡',n:'Motors III',c:5000,r:['mt2'],kind:'drone',d:'2.5× faster'},
+{id:'mt4',ic:'⚡',n:'Motors IV',c:20000,r:['mt3'],rq:1,kind:'drone',d:'3× faster'},
+{id:'mt5',ic:'⚡',n:'Motors V',c:80000,r:['mt4'],rq:2,kind:'drone',d:'3.5× faster'},
+{id:'gb1',ic:'⏱',n:'Growth Boost I',c:300,r:[],kind:'up',d:'Crops ripen 12% faster'},
+{id:'gb2',ic:'⏱',n:'Growth Boost II',c:1500,r:['gb1'],kind:'up',d:'23% faster in total'},
+{id:'gb3',ic:'⏱',n:'Growth Boost III',c:6000,r:['gb2'],kind:'up',d:'32% faster in total'},
+{id:'gb4',ic:'⏱',n:'Growth Boost IV',c:25000,r:['gb3'],rq:1,kind:'up',d:'40% faster in total'},
+{id:'pb1',ic:'💰',n:'Payout Boost I',c:400,r:[],kind:'up',d:'Item sales pay 25% more'},
+{id:'pb2',ic:'💰',n:'Payout Boost II',c:2000,r:['pb1'],kind:'up',d:'50% more in total'},
+{id:'pb3',ic:'💰',n:'Payout Boost III',c:8000,r:['pb2'],kind:'up',d:'75% more in total'},
+{id:'pb4',ic:'💰',n:'Payout Boost IV',c:30000,r:['pb3'],rq:2,kind:'up',d:'100% more in total'}];
+const MAT={loops:{wheat:8},ifs:{wheat:12},vars:{wheat:20},whileL:{wheat:25},ctl:{wheat:15},logic:{wheat:20},ripe:{wheat:15},ground:{wheat:10},growth:{wheat:15},hats:{wheat:10},mkt:{wheat:10},dbg:{wheat:15},math:{wheat:30},funcs:{wheat:40},
+water:{carrot:15},fert:{carrot:30,pumpkin:10},goto:{wood:20},scan:{power:10},bay:{wood:30,carrot:20},meas:{carrot:15},swp:{cactus:8},poly:{power:20},auto2:{wood:20},spr:{pumpkin:30,wood:30},scanf:{power:30},fall:{carrot:60,pumpkin:30},tall:{wood:100},tele:{power:40},pall:{wood:150,carrot:80},hall:{pumpkin:100,cactus:20},warp:{power:100},auto:{cactus:60,melon:20},oc:{melon:50,dragonfruit:10},
+crop_bush:{wheat:10},crop_tree:{wood:10},crop_carrot:{wheat:15},crop_pumpkin:{carrot:20},crop_sunflower:{pumpkin:15},crop_cactus:{power:15},crop_melon:{cactus:15},crop_dragonfruit:{melon:10},
+grid1:{wheat:20},grid2:{wood:15},grid3:{wood:40},grid4:{wood:80,carrot:40},grid5:{wood:150,pumpkin:40},grid6:{wood:300,pumpkin:100},grid7:{wood:500,cactus:40},grid8:{wood:900,cactus:80},grid9:{wood:1500,melon:60},
+hg1:{wood:20,wheat:20},hg2:{wood:50,carrot:30},hg3:{wood:100,pumpkin:30},hg4:{wood:200,power:40},hg5:{wood:350,cactus:30},hg6:{wood:600,melon:30},hg7:{wood:1000,dragonfruit:15},
+mt1:{wheat:30},mt2:{carrot:30},mt3:{power:30},mt4:{cactus:40},mt5:{dragonfruit:20},gb1:{wheat:40},gb2:{carrot:60},gb3:{pumpkin:50},gb4:{melon:30},pb1:{wheat:50},pb2:{pumpkin:30},pb3:{power:60},pb4:{dragonfruit:20}};
+[...NODES,...SHOP].forEach(o=>{if(MAT[o.id])o.m=MAT[o.id]});
+const canShop=x=>!owned[x.id]&&x.r.every(r=>owned[r])&&rebirths>=(x.rq||0)&&wheat>=price(x)&&hasM(x);
+const hdr=t=>`<div class='tabs'>${['📖 Book','🌳 Skill Tree','🛒 Shop','♻ Rebirth','🏆 Leaderboard'].map((x,i)=>`<button class='${t==i?'':'g'}' onclick='ov(${i})'>${x}</button>`).join('')}<span style='flex:1'></span><button class='g' onclick='closeOv()'>✕</button></div>`;
+function ov(tab){curTab=tab;if(tab==0)return ovBook();if(tab==4)return ovLb();if(tab==3)return ovReb();if(tab<2){ov0(tab);$('ovb').querySelector('.tabs').outerHTML=hdr(tab);return}
+const nm=id=>SHOP.find(x=>x.id==id).n;let h=hdr(2)+`<h2>🛒 Shop</h2><p>You have 🪙 ${wheat}. Harvests go into your inventory. Sell them here for coins, but keep some: many upgrades also cost materials from your inventory.</p>`+sellHTML();
+[['Seeds','crop'],['Bigger fields','grid'],['Drones','drone'],['Upgrades','up']].forEach(([ti,kind])=>{h+=`<h3>${ti}</h3><div class='nodes'>`+SHOP.filter(x=>x.kind==kind).map(x=>{const o=owned[x.id],b=canShop(x);
+return `<div class='nd ${o?'owned':b?'':'lock'}'>${x.ic} <b>${x.n}</b><br>${x.d}<br>${x.rq&&rebirths<x.rq?'🔒 Rebirth '+x.rq+' required<br>':''}${x.r.length&&!o?'needs '+x.r.map(nm).join(' + ')+'<br>':''}${!o&&x.m?'Materials: '+matStr(x)+'<br>':''}${o?'✅ Owned':`<button class='${b?'':'g'}' ${b?'':'disabled'} onclick='shop(${SHOP.indexOf(x)})'>Buy · ${costStr(x)}</button>`}</div>`}).join('')+'</div>'});
+$('ovb').innerHTML=h;$('ov').style.display='flex'}
+const INVL=[['hay','Hay',null],['wheat','Wheat',null],['carrot','Carrot','crop_carrot'],['pumpkin','Pumpkin','crop_pumpkin'],['power','Sunflower','crop_sunflower'],['cactus','Cactus','crop_cactus'],['melon','Melon','crop_melon'],['dragonfruit','Dragonfruit','crop_dragonfruit'],['wood','Wood','crop_bush']];
+function invBar(){const b=$('invbar');if(!b)return;b.innerHTML=INVL.map(([k,n,sd])=>`<span class='ic${sd&&!owned[sd]&&!(k=='wood'&&owned.crop_tree)&&!inv[k]?' off':''}' title='${n}'>${IC[k]} ${n} <b>${inv[k]||0}</b></span>`).join('')}
+const sellHTML=()=>{const ks=Object.keys(inv),worth=k=>Math.max(1,Math.round(inv[k]*PRICE[k]*(1+.25*lv('pb'))*(1+.25*(rb.inc||0))));
+return `<h3>Sell</h3>`+(ks.length?`<div class='nodes'>`+ks.map(k=>`<div class='nd'>${IC[k]||''} <b>${k}</b> ×${inv[k]}<br>${PRICE[k]} 🪙 each · worth ${worth(k)} 🪙<br><button onclick='sellUI("${k}",1)'>Sell 1</button> <button onclick='sellUI("${k}")'>Sell all</button></div>`).join('')+`</div><button style='margin-top:8px' onclick='sellUI()'>Sell everything</button>`:`<p>Nothing to sell yet. Harvest some crops!</p>`)};
+function sellUI(k,n){if(k==null)Object.keys(inv).forEach(x=>sellItem(x));else sellItem(k,n);render();ov(2)}
+function shop(i){const x=SHOP[i];if(!canShop(x))return;wheat-=price(x);payM(x);owned[x.id]=1;sv();if(x.kind=='grid'){szOv=0;const f=farm(st);st.n=f.n;st.g=f.g}render();upd();ov(2)}
+function newDrone(x,y){const d={id:++did,x,y,depth:0},el=document.createElement('div');el.className='dr';el.innerHTML=DR.innerHTML;
+el.firstChild.style.filter=`hue-rotate(${d.id*67}deg)`;el.insertAdjacentHTML('beforeend',`<b class='bd'>${d.id}</b>`);$('farm').append(el);d.el=el;DS.push(d);return d}
+function removeDrone(d){if(!d.id)return;const i=DS.indexOf(d);if(i>0)DS.splice(i,1);d.el.remove()}
+async function runCode(code,dr,args){const e=mkEnv(dr);e.args=args||[];return await new AFn(...Object.keys(e),xform(code))(...Object.values(e))}
+function fsel(){const q=$('fsel');if(q)q.innerHTML=S.map((x,i)=>`<option value='${i}'${i==cur?' selected':''}>${esc(x.n)}</option>`).join('')}
+function fsSel(v){S[cur].c=ed.value;openTab(+v)}
+const RBS=[
+{id:'inc',ic:'💫',n:'Golden Harvest',d:'+25% coins from sales per level',max:10,cost:l=>1+l},
+{id:'gro',ic:'🌿',n:'Fertile Soil',d:'Crops ripen 8% faster per level',max:8,cost:l=>2+l},
+{id:'str',ic:'👛',n:'Seed Money',d:'Start every life with 40 🪙 per level',max:10,cost:l=>1+l},
+{id:'wild',ic:'🌼',n:'Wild Meadow',d:'Wild wheat pays +50% per level',max:3,cost:l=>2+2*l},
+{id:'spd',ic:'⚡',n:'Turbo Motors',d:'Drones act 15% faster per level',max:5,cost:l=>3+2*l},
+{id:'hang',ic:'🛸',n:'Extra Hangar',d:'+1 max drone per level',max:4,cost:l=>5+4*l},
+{id:'keep',ic:'🧠',n:'Muscle Memory',d:'Keep Skill Tree tiers 1-3, then 4, then 5 after a rebirth',max:3,cost:l=>3+3*l},
+{id:'dis',ic:'🏷',n:'Haggler',d:'Skills and shop cost 5% less per level',max:6,cost:l=>3+l}];
+const need=()=>Math.round(4000*Math.pow(1.6,rebirths)/100)*100,rbGain=()=>earned>=need()?Math.floor(Math.sqrt(earned/400)):0;
+function ovReb(){const g=rbGain();let h=hdr(3)+`<h2>♻ Rebirth</h2><p>Reset your farm, coins, skills and shop purchases to begin a new life. Your scripts stay. You earn ♻ points from the coins you earned this life, and spend them on permanent boosts. Some skills, seeds, fields and upgrades are locked until you have rebirthed.</p><p>Rebirths: <b>${rebirths}</b> · Points: <b>${rp}</b> ♻ · Earned this life: <b>${earned}</b> 🪙</p><button ${g?'':'disabled'} onclick='rebirth()'>♻ Rebirth now for +${g} points</button> <span style='color:var(--mut)'>needs ${need()} 🪙 earned this life</span><h3>Permanent boosts</h3><div class='nodes'>`+RBS.map(b=>{const l=rb[b.id]||0,mx=l>=b.max,c=b.cost(l),ok=!mx&&rp>=c;
+return `<div class='nd ${mx?'owned':ok?'':'lock'}'>${b.ic} <b>${b.n}</b> (${l}/${b.max})<br>${b.d}<br>${mx?'✅ Maxed':`<button class='${ok?'':'g'}' ${ok?'':'disabled'} onclick='buyRb("${b.id}")'>Buy · ♻ ${c}</button>`}</div>`}).join('')+'</div>';
+$('ovb').innerHTML=h;$('ov').style.display='flex'}
+function buyRb(id){const b=RBS.find(x=>x.id==id),l=rb[id]||0,c=b.cost(l);if(l>=b.max||rp<c)return;rp-=c;rb[id]=l+1;render();ovReb()}
+function rebirth(){const g=rbGain();if(!g)return;stop=true;rp+=g;bestLife=Math.max(bestLife,earned);rebirths++;earned=0;setTimeout(()=>submitScore(),500);const kt=rb.keep?2+rb.keep:0,keep={};
+NODES.forEach(n=>{if(kt&&n.t<=kt&&owned[n.id]&&!n.rq)keep[n.id]=1});owned=keep;wheat=40*(rb.str||0);lastW=wheat;Object.keys(inv).forEach(k=>delete inv[k]);
+setTimeout(()=>{DS.slice(1).forEach(removeDrone);reset();upd();ovReb()},80)}
+let DB=null,UID=null,LB=[],lbTab='total',lbNote='',lastKey='';
+const LBT=[['total','🪙 Total coins'],['bestLife','⭐ Best life'],['rebirths','♻ Rebirths'],['field','🗺 Biggest field']];
+const lbNick=()=>{try{return localStorage.getItem('df_nick')||''}catch(e){return ''}};
+const lbStats=()=>({total:totalEarned,bestLife:Math.max(bestLife,earned),rebirths,field:SZ()});
+async function submitScore(manual){if(!DB||!UID)return false;const nick=lbNick();if(!nick){if(manual)lbNote='Enter a nickname first.';return false}
+const st2=lbStats(),key=nick+JSON.stringify(st2);if(!manual&&key==lastKey)return false;
+try{const ref=DB.collection('scores').doc(UID),snap=await ref.get(),old=(snap.exists&&snap.data())||{},row={nick};
+for(const k of ['total','bestLife','rebirths','field'])row[k]=Math.max(+old[k]||0,st2[k]);row.t=Date.now();
+await ref.set(row);lastKey=key;lbNote='Score saved.';return true}catch(e){lbNote='Could not save your score: '+((e&&e.message)||e);return false}}
+function lbPick(k){lbTab=k;ovLb()}
+async function lbSave(){const v=($('nick').value||'').trim().slice(0,20);try{localStorage.setItem('df_nick',v)}catch(e){}await submitScore(true);ovLb()}
+function ovLb(){const me=lbStats();let h=hdr(4)+`<h2>🏆 Leaderboard</h2>`;
+if(!DB)h+=`<p>The shared leaderboard needs the published page and a signed-in viewer who can write. Your own stats this session are listed below.</p>`;
+else h+=`<div class='bar'><input id='nick' maxlength='20' placeholder='Your nickname' value='${esc(lbNick())}' style='padding:7px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)'><button onclick='lbSave()'>Submit score</button><span style='color:var(--mut)'>${esc(lbNote)}</span></div><p>Your best scores are kept: a new score only replaces an old one if it is higher. Scores also update by themselves every 30 s once you have a nickname.</p>`;
+h+=`<div class='tabs'>${LBT.map(([k,n])=>`<button class='${lbTab==k?'':'g'}' onclick='lbPick("${k}")'>${n}</button>`).join('')}</div><p>This session: ${LBT.map(([k,n])=>`${n} <b>${me[k]}</b>`).join(' · ')}</p>`;
+if(DB){const rows=[...LB].sort((a,b)=>(+b[lbTab]||0)-(+a[lbTab]||0)).slice(0,25);
+h+=rows.length?`<div style='overflow-x:auto'><table style='width:100%;border-collapse:collapse'>`+rows.map((r,i)=>`<tr style='border-bottom:1px solid var(--bd)${r.id==UID?';font-weight:700;background:var(--bd)':''}'><td style='padding:4px 6px'>${['🥇','🥈','🥉'][i]||i+1}</td><td>${esc(String(r.nick||'Anonymous'))}</td><td style='text-align:right;padding:4px 6px'>${(+r[lbTab]||0).toLocaleString()}</td></tr>`).join('')+`</table></div>`:`<p>No scores yet. Be the first!</p>`}
+$('ovb').innerHTML=h;$('ov').style.display='flex'}
+(async()=>{try{if(!window.claude||!claude.use)return;const u=await claude.use('user'),d=await claude.use('db');if(!u||!d)return;const id=await u.id();if(!id)return;UID=id;DB=d;
+d.collection('scores').limit(500).onSnapshot(sn=>{LB=sn.docs.map(x=>Object.assign({id:x.id},x.data()));const a=document.activeElement;if($('ov').style.display=='flex'&&curTab==4&&!(a&&a.id=='nick'))ovLb()},()=>{});
+setInterval(()=>submitScore(false),30000)}catch(e){}})();
+const EX={
+move:{w:`Every action costs one tick, so plan short routes. Going off one edge brings you back on the opposite side.`,c:`// fly around a small square
+move(right)
+move(down)
+move(left)
+move(up)`},
+harvest:{w:`Harvest only ripe crops. Cutting an unripe crop destroys it. Wild wheat on grass can be harvested once and never grows back.`,c:`// harvest every tile of the first row
+for (let i = 0; i < size(); i++) {
+  harvest()
+  move(right)
+}`},
+print:{w:`Use it to check what your program is doing while you debug.`,c:`print("x is " + getX())
+print(canHarvest())`},
+runScript:{w:`Keep small jobs in their own script tab and call them by name. Press the plus button next to the tabs to add one.`,c:`// tab "tend-tile" contains:  if (canHarvest()) harvest()
+// main script:
+for (let i = 0; i < size(); i++) {
+  runScript("tend-tile")
+  move(right)
+}`},
+size:{w:`Never hard-code the field size. Your field grows when you buy bigger fields in the Shop.`,c:`for (let i = 0; i < size(); i++) {
+  move(right)
+}
+print("the field is " + size() + " tiles wide")`},
+getX:{w:`Handy when a tile needs special treatment, such as a corner.`,c:`if (getX() == 0 && getY() == 0) {
+  print("top-left corner")
+}`},
+till:{w:`Most crops need soil. till() turns grass into soil. Bushes and trees can grow on plain grass.`,c:`till()
+plant()   // soil first, then the seed`},
+plant:{w:`The crop must be unlocked. Without an argument it plants wheat. It ripens after a few real seconds.`,c:`till()
+plant(carrot)   // needs Carrot seeds from the Shop
+// bushes and trees grow on grass, no till() needed:
+// plant(bush)`},
+wait:{w:`When there is nothing else to do, wait for crops to grow. It pauses for one second.`,c:`plant()
+wait()
+wait()
+if (canHarvest()) harvest()`},
+canHarvest:{w:`Always check this before harvest() so you never destroy a crop that is still growing.`,c:`if (canHarvest()) {
+  harvest()
+}`},
+getGround:{w:`Tells you whether a tile still needs tilling.`,c:`if (getGround() == "grass") {
+  till()
+}
+plant()`},
+getGrowth:{w:`Lets you decide whether to water a crop or just wait.`,c:`const g = getGrowth()
+if (g >= 0 && g < 4) {
+  print("still growing, stage " + g)
+}`},
+getCrop:{w:`Lets one script treat different crops differently.`,c:`if (getCrop() == carrot) {
+  print("a carrot!")
+}`},
+water:{w:`Moves the crop 20% of its ripening time closer to ripe.`,c:`plant()
+water()
+water()   // two waterings, 40% faster`},
+fertilize:{w:`A stronger boost than water: 50% closer to ripe. Useful for slow crops.`,c:`plant(pumpkin)
+fertilize()`},
+moveTo:{w:`Flies the shortest way right and down to a tile. Costs one tick per tile.`,c:`moveTo(2, 1)   // column 2, row 1
+harvest()`},
+getWheat:{w:`Check your coins and how many actions you have used.`,c:`print(getWheat() + " coins after " + getTicks() + " actions")`},
+peek:{w:`Look at any tile without flying there. Returns an object with ground, crop and growth.`,c:`const t = peek(2, 1)
+print(t.ground + " / " + t.crop + " / " + t.growth)`},
+spawnDrone:{w:`Runs another script tab on a new drone that starts where you stand. Buy Hangar upgrades for more slots.`,c:`// main script: send a helper down each row
+for (let y = 1; y < size(); y++) {
+  moveTo(0, y)
+  spawnDrone("row-farmer")
+}
+// tab "row-farmer":
+// for (let i = 0; i < size(); i++) { harvest(); move(right) }`},
+numDrones:{w:`Check whether you have a free drone slot before spawning.`,c:`if (numDrones() < maxDrones()) {
+  spawnDrone("helper")
+}`},
+droneId:{w:`Gives every drone a different number so they can split the work.`,c:`// in a script run by several drones:
+moveTo(0, droneId())   // each drone takes its own row`},
+fertilizeAll:{w:`Gives every crop in the field a 50% boost in a single action. Great right after plantAll().`,c:`plantAll(pumpkin)
+fertilizeAll()`},
+waterAll:{w:`Waters every crop in the field in a single action.`,c:`plantAll(wheat)
+waterAll()
+waterAll()`},
+sell:{w:`Turns items from your inventory into coins at their listed price.`,c:`sell(Items.Wheat, 5)   // sell five wheat
+sell(Items.Carrot)     // sell all carrots
+sell()                 // sell everything`},
+num_items:{w:`Check what you hold before you spend or sell it.`,c:`if (num_items(Items.Wheat) >= 20) {
+  sell(Items.Wheat)
+}`},
+scanField:{w:`Reads the whole field at once as rows of tile info.`,c:`const field = scanField()
+print(field[0][0].ground)   // row 0, column 0`},
+tillAll:{w:`Tills every grass tile in one action.`,c:`tillAll()
+plantAll(wheat)`},
+plantAll:{w:`Plants a crop on every soil tile in one action.`,c:`tillAll()
+plantAll(carrot)`},
+harvestAll:{w:`Harvests everything that is ripe, everywhere, and returns how many you got.`,c:`const n = harvestAll()
+print("harvested " + n)`},
+teleport:{w:`Jump straight to a tile. One tick, any distance.`,c:`teleport(5, 5)
+harvest()`},
+timeWarp:{w:`Returns false while it is cooling down, so check the result.`,c:`if (timeWarp()) {
+  print("warped!")
+}`},
+autoHarvest:{w:`Turn it on and just fly: ripe tiles are harvested as you land on them.`,c:`autoHarvest(true)
+for (let i = 0; i < 20; i++) {
+  move(right)
+}`},
+overclock:{w:`A 20 second speed burst for all your drones.`,c:`overclock()
+// run your fastest loop now`},
+measure:{w:`Sunflowers report petals and cacti report their size. Use it to pick the best ones.`,c:`print(measure())   // petals or size
+print(measure(right))   // the tile to the right`},
+swap:{w:`Sort cacti so sizes never get smaller going right or down, then harvest one to cash in the whole group.`,c:`if (measure() > measure(right)) {
+  swap(right)
+}`},
+get_companion:{w:`The crop wants a friendly neighbour. Plant it on the tile it names and the harvest triples.`,c:`const c = get_companion()
+print(c[0] + " at " + c[1])`},
+use_item:{w:`The same as water() and fertilize(), in the game's own style.`,c:`use_item(Items.Water)
+use_item(Items.Fertilizer)`},
+unlock:{w:`Lets your script buy upgrades itself. get_cost tells you what they cost first.`,c:`print(get_cost(Unlocks.Expand))
+if (unlock(Unlocks.Expand)) {
+  print("bigger field!")
+}`},
+spawn_drone:{w:`Like spawnDrone, but you can hand the new drone arguments and wait for its answer.`,c:`const id = spawn_drone("worker", 3)   // worker reads args[0]
+print(wait_for(id))`},
+set_execution_speed:{w:`Slow things down to watch your program, or shrink the field to test it.`,c:`set_execution_speed(3)
+set_world_size(3)
+clear()`},
+change_hat:{w:`Purely cosmetic. Give each drone its own look.`,c:`change_hat(Hats.Top_Hat)`}
+};
+const LEX={
+'For loop':{w:`Repeat something a set number of times.`,c:`for (let i = 0; i < 4; i++) {
+  harvest()
+  move(right)
+}`},
+'While loop':{w:`Repeat for as long as the condition is true. while (true) goes on until you press Stop.`,c:`while (true) {
+  if (canHarvest()) harvest()
+  move(right)
+}`},
+'if / else':{w:`Do one thing or another depending on what the drone sees.`,c:`if (canHarvest()) {
+  harvest()
+} else {
+  wait()
+}`},
+'Variables':{w:`A named box that remembers a value. let can change, const cannot.`,c:`let count = 0
+count = count + 1
+print(count)`},
+'Functions':{w:`Give a group of steps a name, then reuse it as often as you like.`,c:`function tendTile() {
+  if (canHarvest()) harvest()
+  till()
+  plant()
+}
+tendTile()
+move(right)
+tendTile()`},
+'Compare':{w:`Questions with a yes or no answer: ==  !=  <  >  <=  >=`,c:`if (getX() >= 2) {
+  print("right half of the field")
+}`},
+'And / or':{w:`Combine questions. && means both, || means either.`,c:`if (canHarvest() && getGround() == "soil") {
+  harvest()
+}`},
+'Maths':{w:`Random numbers and rounding. % gives the remainder after dividing.`,c:`const x = Math.floor(Math.random() * size())
+print(x)
+print(7 % 3)   // 1`},
+'break / continue':{w:`break leaves a loop early. continue skips to the next round.`,c:`for (let i = 0; i < 10; i++) {
+  if (!canHarvest()) continue
+  harvest()
+  break
+}`}
+};
+let bq='';
+function bkCode(b){return (EX[b[0].split('(')[0].trim()]||{}).c||b[5]}
+function ovBook(){const nm=id=>NODES.find(x=>x.id==id).n,q=bq.trim().toLowerCase();
+let h=hdr(0)+`<h2>📖 The Drone Handbook</h2><p>Every command and language feature, explained, with an example you can try. Press <b>Insert</b> to paste an example into your script. Locked entries show what to unlock.</p><p><b>Quick start:</b> 1) <code>harvest()</code> and <code>move(right)</code> collect wild wheat. 2) Sell it in the 🛒 Shop. 3) Unlock <code>till()</code> and <code>plant()</code>, then wait for crops to ripen. 4) Unlock For Loops so your drone repeats work for you.</p><input id='bkq' placeholder='Search commands…' value='${esc(bq)}' oninput='bq=this.value;ovBook()' style='width:100%;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);margin-bottom:6px'>`;
+const rows=BOOK.map((b,i)=>[b,i]).filter(([b])=>!q||(b[0]+' '+b[4]).toLowerCase().includes(q));
+h+=rows.map(([b,i])=>{const lk=b[1]&&!owned[b[1]],e=EX[b[0].split('(')[0].trim()]||{};
+return `<div class='bk ${lk?'lk':''}'><b><code>${esc(b[0])}</code></b> ${lk?'🔒 needs '+nm(b[1]):'✅'}<div class='mu'>${esc(String(b[2]))} · returns ${esc(String(b[3]))}</div><div>${esc(b[4])}</div>${e.w?`<div><i>When to use it:</i> ${esc(e.w)}</div>`:''}<pre class='ex'>${esc(bkCode(b))}</pre><button class='g' onclick='bkIns(${i},0)'>Insert into my script</button></div>`}).join('')||'<p>No command matches your search.</p>';
+if(!q)h+='<h3>Language features</h3>'+LANG.map((l,i)=>{const lk=!owned[l[1]],e=LEX[l[0]]||{};return `<div class='bk ${lk?'lk':''}'><b>${esc(l[0])}</b> ${lk?'🔒 needs '+nm(l[1]):'✅'}<div>${esc(e.w||'')}</div><pre class='ex'>${esc(e.c||l[2])}</pre><button class='g' onclick='bkIns(${i},1)'>Insert into my script</button></div>`}).join('');
+$('ovb').innerHTML=h;$('ov').style.display='flex';const bi=$('bkq');if(q&&bi){bi.focus();bi.setSelectionRange(bi.value.length,bi.value.length)}}
+function bkIns(i,k){const code=k?((LEX[LANG[i][0]]||{}).c||LANG[i][2]):bkCode(BOOK[i]);ed.value=ed.value.replace(/\s+$/,'')+'\n\n'+code+'\n';S[cur].c=ed.value;upd();closeOv();ed.focus()}
+const TUT=[
+{t:`Welcome, farmer! 🚁`,x:`You do not farm by hand. You write code, and your drone follows it. Grow crops, sell them, and spend the coins on better commands and a bigger farm. This tour takes about a minute, and you can skip it at any time.`,s:'#farmcard'},
+{t:`Your farm`,x:`This is your field. Green tiles are grass, brown tiles are soil, and 🌾 is wild wheat you can harvest right now. The 🚁 is your drone. The field wraps around: flying off the right edge brings you back on the left.`,s:'#farm'},
+{t:`Write a script`,x:`Commands go in the editor, one per line. This example harvests a tile, flies right, and repeats. Press ▶ Run (or F5) to watch the drone do it.`,s:'.edw',b:[`Put the example in my editor`,()=>tutSet(`harvest()\nmove(right)\nharvest()\nmove(right)\nharvest()\n`)]},
+{t:`Your inventory`,x:`Everything you harvest goes into your inventory, not straight into coins. The counters show how much of each crop you hold.`,s:'#invbar'},
+{t:`Sell your harvest`,x:`Open the 🛒 Shop and press Sell to turn items into 🪙 coins. Sell your hay first. Careful: many upgrades also cost materials such as wheat, so keep some.`,s:'header .bar button:nth-child(3)'},
+{t:`Unlock skills`,x:`The 🌳 Skill Tree unlocks commands and language features. Buy Tilling and then Sowing first. They let you till() the soil and plant() crops that grow back. Locked commands show a red wavy underline in the editor.`,s:'header .bar button:nth-child(2)'},
+{t:`Grow something`,x:`Crops grow in real time. The classic loop is till(), plant(), wait for the progress bar to fill, then harvest(). Harvesting early destroys the crop, so check canHarvest() first.`,s:'.edw',b:[`Put a farming example in my editor`,()=>tutSet(`till()\nplant()\nwait()\nif (canHarvest()) {\n  harvest()\n}\n`)]},
+{t:`Repeat with loops`,x:`Once you unlock For Loops, one short loop does the work of dozens of lines. The editor suggests commands as you type: press Tab or Enter to accept.`,s:'.edw',b:[`Put a loop example in my editor`,()=>tutSet(`for (let i = 0; i < size(); i++) {\n  harvest()\n  move(right)\n}\n`)]},
+{t:`The Command Book`,x:`The 📖 Book lists every command with a plain explanation, an example, and an Insert button that pastes the example into your script. Locked ones show 🔒 and what to unlock. You can search it too.`,s:'header .bar button:nth-child(1)'},
+{t:`More scripts, more drones`,x:`Press ＋ to add more scripts. Later skills let one script call another with runScript(), or launch extra drones with spawnDrone().`,s:'#tabs'},
+{t:`Rebirth and leaderboard`,x:`Once you have earned enough, ♻ Rebirth restarts your farm for permanent boosts and unlocks stronger commands. The 🏆 Leaderboard compares you with other players. You can replay this tutorial any time with ❓ Tutorial. Happy farming!`,s:'header .bar button:nth-child(4)'}];
+let tHl=null;
+function tutSet(code){ed.value=code;S[cur].c=code;upd();ed.focus()}
+function tutB(i){TUT[i].b[1]()}
+function endTut(){$('tut').style.display='none';if(tHl)tHl.classList.remove('thl');tHl=null;try{localStorage.setItem('df_tut','1')}catch(e){}}
+function tut(i){if(tHl)tHl.classList.remove('thl');tHl=null;if(i<0||i>=TUT.length){endTut();return}
+const st2=TUT[i],el=st2.s&&document.querySelector(st2.s);if(el){el.classList.add('thl');tHl=el;try{el.scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}}
+const c=$('tut');c.style.display='block';
+c.innerHTML=`<div class='tk'><b>${st2.t}</b><span style='color:var(--mut)'>${i+1}/${TUT.length}</span></div><p>${st2.x}</p>${st2.b?`<button class='g' onclick='tutB(${i})'>${st2.b[0]}</button>`:''}<div class='tn'><button class='g' onclick='endTut()'>Skip tutorial</button><span style='flex:1'></span>${i?`<button class='g' onclick='tut(${i-1})'>Back</button>`:''}<button onclick='tut(${i+1})'>${i==TUT.length-1?'Finish':'Next'}</button></div>`}
+let nat=0;
+function toggleFs(){const c=$('farmcard'),on=c.classList.toggle('fs');$('fsb').textContent=on?'✕ Exit fullscreen':'⛶ Fullscreen';const d=document.documentElement;
+try{if(on){const r=d.requestFullscreen&&d.requestFullscreen();if(r&&r.then)r.then(()=>{nat=1}).catch(()=>{})}else if(document.fullscreenElement){nat=0;document.exitFullscreen()}}catch(e){}}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&nat){nat=0;if($('farmcard').classList.contains('fs'))toggleFs()}});
+document.addEventListener('keydown',e=>{if(e.key=='Escape'&&$('farmcard').classList.contains('fs')&&$('ov').style.display!='flex')toggleFs()});
+reset();upd();tabs();setInterval(render,500);
+try{if(!localStorage.getItem('df_tut'))setTimeout(()=>tut(0),700)}catch(e){setTimeout(()=>tut(0),700)}
+</script></body></html>
